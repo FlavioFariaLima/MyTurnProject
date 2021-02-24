@@ -18,16 +18,16 @@ MonoBehaviour:
   race: {fileID: 11400000, guid: e010cac0f93abe340a04ee7162fb5bc7, type: 2}
   classe: {fileID: 11400000, guid: fac8c1b79ed9f4f499530af48ed7f6ff, type: 2}
   abilitiesValues: 0a000000100000000c0000000c0000000e0000000c000000
-  health: 8
+  health: 11
   armorClass: 10
-  meleeAttack: 3
+  meleeAttack: 1
   meleeDamage: 6
-  meleeDistance: 3
-  rangeAttack: 3
+  meleeDistance: 2
+  rangeAttack: 2
   rangeDamage: 8
   rangeDistance: 30
   resistences:
-    fortitude: 0500000002000000030000000000000000000000
+    fortitude: 0600000003000000030000000000000000000000
     reflex: 0000000000000000000000000000000000000000
     will: 0000000000000000000000000000000000000000
   movement: 9

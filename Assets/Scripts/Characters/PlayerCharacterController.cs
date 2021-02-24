@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
@@ -34,15 +35,9 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     public Vector3 characterPosition;
     public float arriveDistance = 1.5f;
 
-    //
+    // AI
     private bool isAI;
     private AICharacterController AI = null;
-
-    // Actions
-    private bool canMove;
-    public float hasMoved = 0;
-
-    private bool canAct;
 
     [Header("ProjectilePath")]
     public Rigidbody projectile;
@@ -56,9 +51,32 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     private bool canShoot = true;
     public GameObject eyes;
 
+    // Actions
+    private bool canAct;
+    private bool canMove;
+    private float hasMoved = 0;
+    private bool canAttack;
+
+    // Mouse Interactions
+    private bool mouseIsOver;
+    [SerializeField] private TextMeshPro infoName;
+
+    // Enemy Selection
+    private CharacterSheet selectedEnemy;
+
     public bool CanAct
     {
         get { return canAct; }
+    }
+
+    public bool CanMove
+    {
+        get { return canMove; }
+    }
+
+    public float HasMoved
+    {
+        get { return hasMoved; }
     }
 
     public NavMeshAgent CharacterAgent
@@ -70,6 +88,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     void Start()
     {
         AI = transform.GetComponent<AICharacterController>();
+        cam = Camera.main;
 
         // Character
         character = GetComponent<CharacterSheet>();
@@ -82,6 +101,10 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         characterAgent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
         animator.SetBool("isAlive", true);
+
+        // Info Interface
+        infoName.text = character.GetName();
+        infoName.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -106,10 +129,17 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     private void OnMouseUp()
     {
+        //if (isAI)
+        //{
+        //    selectedEnemy = this.character;
+        //    StartCoroutine(Global.UI.LerpMoveObject(Global.UI.enemyInfo, this.character, MovePanelType.leftRight, true));
+
+        //}
+
         if (!Global.Commands.playerIsAttacking && Global.Commands.GetSelectedCharacters()[0] != this)
         {
-            if (Global.Manager.playerTurn == Global.Manager.MatchPlayers[this.character.GetPlayerId()].player
-                && Global.Manager.MatchPlayers[this.character.GetPlayerId()].player.GetName != "DM")
+            if (Global.Match.playerTurn == Global.Match.MatchPlayers[this.character.GetPlayerId()].player
+                && Global.Match.MatchPlayers[this.character.GetPlayerId()].player.GetName != "DM")
             {
                 SetSelectState(true);
             }
@@ -123,12 +153,21 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             {
                 Global.Commands.GetSelectedCharacters()[0].AttackEnemy(this.character, Global.Commands.attackType);
                 Global.Commands.playerIsAttacking = false;
+
             }
+
+            Global.UI.characterSheet.controller.canAttack = false;
         }
+
+        Global.UI.SelectCharacterForUI(this.character.GetId());
+
     }
 
     private void OnMouseEnter()
     {
+        mouseIsOver = true;
+        InfoUI(true);
+
         if (Global.Commands.playerIsAttacking && !isAI && !selectState)
         {
             float distance = Vector3.Distance(Global.Commands.GetSelectedCharacters()[0].transform.position, this.transform.position);
@@ -147,10 +186,63 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     private void OnMouseExit()
     {
+        mouseIsOver = false;
+        InfoUI(false);
+
         if (Global.Commands.playerIsAttacking)
         {
             Global.UI.distanceInfo.gameObject.SetActive(false);
             canShoot = true;
+        }
+    }
+
+    private void InfoUI(bool active)
+    {
+        if (active)
+        {
+            infoName.gameObject.SetActive(true);
+            FaceTextMeshToCamera();
+        }
+        else
+        {
+            infoName.gameObject.SetActive(false);
+        }
+    }
+
+    private void FaceTextMeshToCamera()
+    {
+        Vector3 origRot = infoName.transform.eulerAngles;
+        infoName.transform.LookAt(transform.position + Camera.main.transform.rotation * Vector3.forward,
+             Camera.main.transform.rotation * Vector3.up);
+        origRot.y = infoName.transform.eulerAngles.y;
+        infoName.transform.eulerAngles = origRot;
+    }
+
+    // Selected State
+    public bool GetSelectState()
+    {
+        return selectState;
+    }
+
+    public void SetSelectState(bool selected)
+    {
+        selectState = selected;
+
+        if (selected)
+        {
+            Global.Commands.ClearSelectedCharacters(); // First we clear the list of selected characters
+            Global.Commands.AddSelectedCharacter(this); // Then we add this character to the list
+
+            Global.UI.selectedCharacterObject = this.gameObject;
+            Global.UI.characterSheet = character;
+            Global.UI.CharacterInventory = inventory;
+            Global.UI.CharacterHotbar = hotbar;
+
+            selectedEffect.SetActive(true);
+        }
+        else
+        {
+            selectedEffect.SetActive(false);
         }
     }
 
@@ -176,6 +268,16 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     public AICharacterController GetPlayerAI()
     {
         return AI;
+    }
+
+    public void FootL()
+    {
+
+    }
+
+    public void FootR()
+    {
+
     }
 
     // AI Control
@@ -207,16 +309,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
-    public void FootL()
-    {
-
-    }
-
-    public void FootR()
-    {
-
-    }
-
     public bool DestinationReached()
     {
         // The path hasn't been computed yet if the path is pending.
@@ -231,34 +323,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         }
 
         return remainingDistance <= arriveDistance;
-    }
-
-    // Selected State
-    public bool GetSelectState()
-    {
-        return selectState;
-    }
-
-    public void SetSelectState(bool selected)
-    {
-        selectState = selected;
-
-        if (selected)
-        {
-            Global.Commands.ClearSelectedCharacters(); // First we clear the list of selected characters
-            Global.Commands.AddSelectedCharacter(this); // Then we add this character to the list
-
-            Global.UI.selectedCharacterObject = this.gameObject;
-            Global.UI.characterSheet = character;
-            Global.UI.CharacterInventory = inventory;
-            Global.UI.CharacterHotbar = hotbar;
-
-            selectedEffect.SetActive(true);
-        }
-        else
-        {
-            selectedEffect.SetActive(false);
-        }
     }
 
     // Mouse Methods
@@ -373,6 +437,28 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
+    public IEnumerator LookAtPosition(Transform target)
+    {
+        float duration = 1f;
+        float elapsed = 0;
+        Vector3 direction = target.position - transform.position;
+        Quaternion toRotation = Quaternion.FromToRotation(transform.forward, direction);       
+
+        float angle = Vector3.Angle((target.position - transform.position), transform.forward);
+
+        if (angle > 15)
+        {
+            while (elapsed < duration)
+            {
+                //angle = Vector3.Angle((target.position - transform.position), transform.forward);
+                transform.rotation = Quaternion.Slerp(transform.rotation, toRotation, elapsed / duration);
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
+    }
+
+    // Combat
     public IEnumerator MoveToAttack(Vector3 dest, CharacterSheet enemy, Actions.AttackType type)
     {
         if (true)
@@ -383,7 +469,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             canMove = true;
             StartCoroutine(MoveToPosition(dest));
             characterAgent.stoppingDistance = 1.5f;
-            float angle = 10;
+            //float angle = 10;
 
             while (!DestinationReached())
             {
@@ -415,7 +501,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
-    // Combat
     public void AttackEnemy(CharacterSheet enemy, Actions.AttackType type)
     {
         if (canAct)
@@ -428,6 +513,8 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             string bonusSymbolDmg = "+";
             string attackConclusion = "Missed Attack";
             string hasDamage = "";
+
+            StartCoroutine(LookAtPosition(enemy.transform));
 
             if (type == Actions.AttackType.melee)
             {
@@ -490,7 +577,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     public IEnumerator ShowProjectilePath()
     {
         lineVisual.positionCount = lineSegment + 1;
-        cam = Camera.main;
 
         Gradient restartAlpha = new Gradient();
         restartAlpha.SetKeys
@@ -512,9 +598,11 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         IEnumerator HideLine()
         {
             Gradient lineRendererGradient = new Gradient();
-            float fadeSpeed = 1.5f;
+            float fadeSpeed = 0.5f;
             float timeElapsed = 0f;
             float alpha = 1f;
+
+            Global.UI.SetCursor(Global.UI.cursorDefault, false);
 
             while (timeElapsed < fadeSpeed)
             {
@@ -531,6 +619,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                 yield return null;
             }
 
+            HasAction(false);
             lineVisual.gameObject.SetActive(false);
             cursor.gameObject.SetActive(false);
         }
@@ -551,7 +640,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
                 shootPoint.transform.rotation = Quaternion.LookRotation(vo);
 
-                if (Input.GetMouseButtonDown(0) && canShoot && canAct)
+                if (Input.GetMouseButtonDown(0) && canShoot && canAct && !Global.CanvasManager.MouseIsOver)
                 {
                     Rigidbody obj = Instantiate(projectile, shootPoint.position, transform.rotation);
                     obj.velocity = vo;
@@ -561,7 +650,10 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                     obj.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 
                     StartCoroutine(HideLine());
-                    //canAct = false;
+                }
+                else if (Input.GetMouseButtonDown(0) && canShoot && canAct && Global.CanvasManager.MouseIsOver)
+                {
+                    StartCoroutine(HideLine());
                 }
             }
         }
@@ -628,29 +720,47 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     }
 
     // Actions Menu
-    public bool CanMove()
+    public void HasAction(bool has)
     {
-        return canMove;
+        if (has)
+        {
+            canAct = true;
+        }
+        else
+        {
+            canAct = false;
+            canShoot = false;
+        }
     }
 
     public bool AllowToMove(bool allow)
     {
+        canMove = allow;
         Global.Commands.playerIsAttacking = false;
 
-        canMove = allow;
+        if (allow && !isAI)
+        {
+            Global.UI.SetCursor(Global.UI.cursorMove, false);
+        }
 
-        Debug.Log($"Character can Move now...");
         return true;
     }
 
     public bool AttackMelee()
     {
         canMove = false;
+        canAttack = true;
+        StartCoroutine(LookAtMouseDirection());
 
         if (canAct)
         {
             Global.Commands.playerIsAttacking = true;
-            Global.Commands.attackType = Actions.AttackType.melee; ;
+            Global.Commands.attackType = Actions.AttackType.melee;
+
+            if(!isAI)
+            {
+                Global.UI.SetCursor(Global.UI.cursorMelee, false);
+            }
         }
 
         return true;
@@ -669,6 +779,11 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             cursor.gameObject.SetActive(true);
             lineVisual.gameObject.SetActive(true);
+
+            if (!isAI)
+            {
+                Global.UI.SetCursor(Global.UI.cursorRange, false);
+            }
         }
         return true;
     }
@@ -679,7 +794,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         return true;
     }
 
-    public void ResetAllForNewTurn()
+    public void ResetActions()
     {
         canMove = false;
         hasMoved = 0;
@@ -688,6 +803,29 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         if (isAI && AI != null)
         {
             AI.CanAct(true);
+        }
+    }
+
+    // Misc
+    public IEnumerator LookAtMouseDirection()
+    {
+        while (canAttack)
+        {
+            Ray camRay = cam.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            LayerMask myLayer = LayerMask.GetMask("Terrain", "Character", "Default");
+
+            if (Physics.Raycast(camRay, out hit, 100f, myLayer))
+            {
+                //cursor.SetActive(true);
+                //cursor.transform.position = hit.point + Vector3.up * 0.1f;
+                //transform.rotation = Quaternion.LookRotation(hit.point, Vector3.up);
+                transform.LookAt(hit.point, Vector3.up);
+
+            }
+
+            yield return null;
         }
     }
 }

@@ -33,7 +33,7 @@ public class TerrainManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))
             {
-                if (Global.UI.characterSheet.controller.CanMove() && !Global.UI.characterSheet.controller.IsAi())
+                if (Global.UI.characterSheet.controller.CanMove && !Global.UI.characterSheet.controller.IsAi())
                 {
                     ShowPath(hit.point);
                     Global.UI.distanceInfo.gameObject.SetActive(true);
@@ -91,7 +91,7 @@ public class TerrainManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     /// </summary>
     void ShowPath(Vector3 dest)
     {
-        if (Global.Commands.GetSelectedCharacters()[0].hasMoved >= Global.Commands.GetSelectedCharacters()[0].character.GetMovement())
+        if (Global.Commands.GetSelectedCharacters()[0].HasMoved >= Global.Commands.GetSelectedCharacters()[0].character.GetMovement())
         {
             return;
         }
@@ -110,11 +110,11 @@ public class TerrainManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         //line.startColor = new Color(1, 1, 1, 0.2f);
         line.colorGradient = gradient;
 
-        Global.Commands.GetSelectedCharacters()[0].movementSofar = Global.Commands.GetSelectedCharacters()[0].hasMoved;
+        Global.Commands.GetSelectedCharacters()[0].movementSofar = Global.Commands.GetSelectedCharacters()[0].HasMoved;
         NavMeshPath path = new NavMeshPath();
         NavMesh.CalculatePath(Global.Commands.GetMainSelectedCharacterTransform().position, dest, NavMesh.AllAreas, path);
         float distance = 0;
-        float soFar = Global.UI.characterSheet.controller.hasMoved;
+        float soFar = Global.UI.characterSheet.controller.HasMoved;
         Vector3 finalPoint = new Vector3();
 
         for (int i = 0; i < path.corners.Length - 1; i++) // Leave room to add 1

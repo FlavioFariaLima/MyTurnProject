@@ -9,12 +9,11 @@ public class Inventory: MonoBehaviour
 
     [SerializeField] private float maxWeight;
     [SerializeField] private float curWeight;
-    [SerializeField] private int size;
+    [HideInInspector] private int size = 48;
 
     [SerializeField] List<Item> inventoryItems = new List<Item>();
 
     // Events
-
     public event Action OnAdd = () => { };
     public event Action OnRemove = () => { };
 

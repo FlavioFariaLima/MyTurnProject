@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 5721153911912350952}
   - component: {fileID: 5701176527313910476}
   - component: {fileID: 5708366495926733508}
-  - component: {fileID: 5732430508609992654}
   - component: {fileID: 5722889483556934019}
   - component: {fileID: 5722889483556934016}
+  - component: {fileID: 94423459}
   m_Layer: 0
   m_Name: ItemDropModel
   m_TagString: DropedItem
@@ -84,20 +84,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5732430508609992654
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5721877540014480358}
-  m_Material: {fileID: 13400000, guid: 22fcdf48c0c4ad9419d96252be777853, type: 2}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 8dca5595cdaced544b3bca78ca84e8d8, type: 3}
 --- !u!54 &5722889483556934019
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -126,4 +112,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af64bc7e3595e7949b2bb784717c2057, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemBlueprint: {fileID: 11400000, guid: 870dcb3b317df0545bb68dfeca9f1969, type: 2}
+  itemBlueprint: {fileID: 11400000, guid: 81e933fa8448005408f64f167e7cbe45, type: 2}
+--- !u!65 &94423459
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5721877540014480358}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.2, y: 1.2, z: 1.2}
+  m_Center: {x: -0.0000009536743, y: -0.000007793307, z: 9.769963e-15}

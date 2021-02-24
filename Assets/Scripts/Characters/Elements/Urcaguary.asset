@@ -22,7 +22,7 @@ MonoBehaviour:
   armorClass: 10
   meleeAttack: 4
   meleeDamage: 6
-  meleeDistance: 4
+  meleeDistance: 2
   rangeAttack: 1
   rangeDamage: 6
   rangeDistance: 18

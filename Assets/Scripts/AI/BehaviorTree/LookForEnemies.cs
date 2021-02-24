@@ -75,29 +75,59 @@ namespace BehaviorDesigner.Runtime.Tasks.UltraMare
         {
             List<Transform> findEnemies = new List<Transform>();
 
-            RaycastHit hit;
-            Quaternion startingAngle = Quaternion.AngleAxis(-60, Vector3.up);
-            Quaternion stepAngle = Quaternion.AngleAxis(5, Vector3.up);
-            var angle = transform.rotation * startingAngle;
-            var direction = angle * Vector3.forward;
-            var pos = transform.position;
+            //RaycastHit hit;
+            //Quaternion startingAngle = Quaternion.AngleAxis(-70, Vector3.up);
+            //Quaternion stepAngle = Quaternion.AngleAxis(5, Vector3.up);
 
-            for (var i = 0; i < 24; i++)
+            //var angle = transform.rotation * startingAngle;
+            //var direction = angle * Vector3.forward;
+            //var pos = transform.position;
+
+            //for (var i = 0; i < 24; i++)
+            //{
+            //    if (Physics.Raycast(pos, direction, out hit, 500))
+            //    {
+            //        var enemy = hit.collider.GetComponent<CharacterSheet>();
+
+            //        if (enemy)
+            //        {
+            //            if (!characterAI.myTeam.Contains(enemy.transform) && !characterAI.knowEnemys.Contains(enemy.transform))
+            //            {
+            //                findEnemies.Add(enemy.transform);
+            //            }
+            //        }
+            //    }
+
+            //    direction = stepAngle * direction;
+            //}
+
+            //return findEnemies;
+            ////
+            ///
+
+            var allCharacters = Global.Match.InGameCharacters();
+
+            if (allCharacters == null)
             {
-                if (Physics.Raycast(pos, direction, out hit, 500))
-                {
-                    var enemy = hit.collider.GetComponent<CharacterSheet>();
+                return null;
+            }
 
-                    if (enemy)
+            foreach (MatchCharacter enemy in allCharacters)
+            {
+                var direction = enemy.character.transform.position - this.transform.position;
+                direction.y = 0;
+                var angle = Vector3.Angle(direction, transform.forward);
+                if (direction.magnitude < viewDistance && angle < fieldOfViewAngle * 0.5f)
+                {
+                    // The hit agent needs to be within view of the current agent
+                    if (LineOfSight(enemy.character.gameObject) && enemy.character.GetPlayerId() != characterSheet.GetPlayerId())
                     {
-                        if (!characterAI.myTeam.Contains(enemy.transform) && !characterAI.knowEnemys.Contains(enemy.transform))
+                        if (!characterAI.myTeam.Contains(enemy.character.transform) && !characterAI.knowEnemys.Contains(enemy.character.transform))
                         {
-                            findEnemies.Add(enemy.transform);
+                            findEnemies.Add(enemy.character.transform);
                         }
                     }
                 }
-
-                direction = stepAngle * direction;
             }
 
             return findEnemies;

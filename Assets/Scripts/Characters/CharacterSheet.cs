@@ -9,6 +9,12 @@ public class CharacterSheet: MonoBehaviour
     // Components
     [SerializeField] private int charId;
     [SerializeField] private int playerId;
+    [SerializeField] private Sprite charPortrait;
+    public  Sprite CharPortrait
+    {
+        get { return charPortrait; }
+    }
+
     [HideInInspector] public PlayerCharacterController controller; // Set by CharacterController      
     [HideInInspector] public bool isMyTurn;
 
@@ -145,7 +151,7 @@ public class CharacterSheet: MonoBehaviour
     public void TakeDamage(int dmg, CharacterSheet whoHitMe)
     {
         currentHealth -= dmg;
-        Global.Manager.UpdateIconHealthBar(this);
+        Global.Match.UpdateIconHealthBar(this);
 
         if (currentHealth < 0 && isAlive)
         {
@@ -168,7 +174,7 @@ public class CharacterSheet: MonoBehaviour
 
         CharIcon.transform.GetComponent<Image>().color = new Color(1, 1, 1, 0.3f);
         // Check if Match is Over
-        Global.Manager.CheckForMatchEnd();
+        Global.Match.CheckForMatchEnd();
     }
 }
 

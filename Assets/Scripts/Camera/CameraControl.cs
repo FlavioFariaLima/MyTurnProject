@@ -56,7 +56,6 @@ public class CameraControl : MonoBehaviour
 
     private void LookTo()
     {
-        //transform.LookAt(objToFocus);
         Vector3 relativePos = objToFocus.position - transform.position;
         Quaternion toRotation = Quaternion.LookRotation(relativePos);
         transform.rotation = Quaternion.Lerp(transform.rotation, toRotation, 2 * Time.deltaTime);
@@ -120,11 +119,13 @@ public class CameraControl : MonoBehaviour
             // Cancel any lock
             focusObject = false;
 
-            mouseX += Input.GetAxis("Mouse X") * rotationSpeed;
-            mouseY -= Input.GetAxis("Mouse Y") * rotationSpeed;
+            mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
+            mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;
 
-            mouseY = Mathf.Clamp(mouseY, 30, 90);
-            transform.rotation = Quaternion.Euler(mouseY, mouseX, transform.rotation.z);
+            Vector3 rot = transform.rotation.eulerAngles + new Vector3(-mouseY, mouseX, 0f); //use local if your char is not always oriented Vector3.up
+            rot.x = Mathf.Clamp(rot.x, 30f, 90f);
+
+            transform.eulerAngles = rot;
         }
     }
 
@@ -132,25 +133,24 @@ public class CameraControl : MonoBehaviour
     {
         Vector3 camPos = transform.position;
 
-        if (Input.GetAxis("Mouse ScrollWheel") > 0 || Input.GetKeyDown(KeyCode.Minus))
+        if (!Global.CanvasManager.MouseIsOver)
         {
-            // Cancel any lock
-            followCharacter = false;
+            if (Input.GetAxis("Mouse ScrollWheel") > 0 || Input.GetKeyDown(KeyCode.Minus))
+            {
+                // Cancel any lock
+                followCharacter = false;
+                camPos.y -= 300 * Time.deltaTime;
+            }
+            else if (Input.GetAxis("Mouse ScrollWheel") < 0 || Input.GetKeyDown(KeyCode.Plus))
+            {
+                // Cancel any lock
+                followCharacter = false;
+                camPos.y += 300 * Time.deltaTime;
+            }
 
-            //camPos = Vector3.Lerp(camPos, new Vector3(camPos.x, camPos.y - 10, camPos.z), 100);
-            camPos.y -= 300 * Time.deltaTime;
+            camPos.y = Mathf.Clamp(camPos.y, zoomMin, zoomMax);
+            transform.position = camPos;
         }
-        else if (Input.GetAxis("Mouse ScrollWheel") < 0 || Input.GetKeyDown(KeyCode.Plus))
-        {
-            // Cancel any lock
-            followCharacter = false;
-
-            //camPos = Vector3.Lerp(camPos, new Vector3(camPos.x, camPos.y + 10, camPos.z), 100);
-            camPos.y += 300 * Time.deltaTime;
-        }
-
-        camPos.y = Mathf.Clamp(camPos.y, zoomMin, zoomMax);
-        transform.position = camPos;
     }
 
     public void FollowCharacter(Transform Character)
@@ -169,13 +169,19 @@ public class CameraControl : MonoBehaviour
 
     public IEnumerator GoToCharacter(Vector3 position)
     {
-        while (Vector3.Distance(transform.localPosition, position) > 10f)
+        Debug.Log($"Go to Position: {position}");
+
+        while (Vector3.Distance(transform.position, position) > 10f)
         {
+            // Move
             transform.position = Vector3.Lerp(transform.position, position + Vector3.up * 2, panSpeed * (Time.deltaTime / 15));
-            transform.LookAt(position);
+
+            // Rotate
+            Vector3 relativePos = position - transform.position;
+            Quaternion toRotation = Quaternion.LookRotation(relativePos);
+            transform.rotation = Quaternion.Lerp(transform.rotation, toRotation, 2 * Time.deltaTime);
+
             yield return null;
         }
-
-        Debug.Log($"Go to Position: {position}");
     }
 }

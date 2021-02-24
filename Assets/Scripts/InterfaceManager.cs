@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -50,7 +49,8 @@ public class InterfaceManager : MonoBehaviour
     public GameObject craftSlotsParents;
     public GameObject craftSlotPrefab;
     public InventorySlot[] _playerSlots;
-    public GameObject characterActions;
+    [SerializeField] private GameObject characterActions;
+    [SerializeField] public RectTransform enemyInfo;
 
     [Header("Characters Hotbar")]
     public GameObject panel_playerHotbar;
@@ -77,7 +77,8 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] public GameObject StationPanelPrefab_Parent;
 
     [Header("Informations Panels")]
-    [SerializeField] private TextMeshProUGUI logPanel;
+    [SerializeField] private GameObject logPanel;
+    [SerializeField] private GameObject LogInputPrefab;
     [SerializeField] private RectTransform itemInfoPanel;
     [SerializeField] private RectTransform recipeInfoPanel;
     [SerializeField] private GameObject dropedItemPrefab;
@@ -99,16 +100,65 @@ public class InterfaceManager : MonoBehaviour
     private Color color1 = new Color(0.5f, 1f, .4f, 1f);
     private Color color2 = new Color(0.0f, .9f, .95f, 1f);
 
-
     [Header("Match Manager")]
     [SerializeField] public GameObject TurnPanel;
     [SerializeField] public GameObject MatchCharacterIcons;
     [SerializeField] public GameObject CharacterIconsPrefab;
     [SerializeField] public GameObject EndMatch;
+    [SerializeField] private GameObject passTurnBtn;
+    [SerializeField] private GameObject portrait;
+
+    private CharacterSheet characterSelectedToUI;
+
+    [Header("Menu and Stuff")]
+    [SerializeField] private GameObject matchMenu;
+    [SerializeField] private GameObject playerCharactersShotcut;
+
+    [Header("Cursors")]
+    [SerializeField] public Texture2D cursorDefault;
+    [SerializeField] public Texture2D cursorInteract;
+    [SerializeField] public Texture2D cursorMove;
+    [SerializeField] public Texture2D cursorMelee;
+    [SerializeField] public Texture2D cursorRange;
+
+    private Texture2D lastCursor;
+    public Texture2D LastCursor
+    {
+        get { return lastCursor; }
+    }
+
+    // Get/Set Variables
+    public void SetCursor(Texture2D c, bool temp)
+    {
+        // Cursor Settings
+        CursorMode cursorMode = CursorMode.ForceSoftware;
+        Vector2 hotSpot = new Vector2(12, 12);
+
+        if (!temp)
+        {
+            // Set Cursor
+            Cursor.SetCursor(c, hotSpot, cursorMode);
+            lastCursor = c;
+        }
+        else
+        {
+            Cursor.SetCursor(c, hotSpot, cursorMode);
+        }
+    }
+
+    public GameObject MatchMenu()
+    {
+        return matchMenu;
+    }
 
     // Start is called before the first frame update
     void Start()
     {
+        SetCursor(cursorDefault, false);
+
+        // Disable and Hide Stuff
+        matchMenu.SetActive(false);
+
         // Character Features
         characterSheet = selectedCharacterObject.GetComponent<CharacterSheet>();
 
@@ -160,9 +210,6 @@ public class InterfaceManager : MonoBehaviour
 
     void KeysManager()
     {
-        //if (EventSystem.current.IsPointerOverGameObject())
-        //    return;
-
         // Check what in under mouse cursor
         Ray mainRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit mainHit;
@@ -272,6 +319,12 @@ public class InterfaceManager : MonoBehaviour
             {
                 mouseOverSlot.OnDropButton();
             }
+        }
+
+        // Menu and Stuff
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Global.ShowMatchMenu();
         }
     }
 
@@ -575,22 +628,21 @@ public class InterfaceManager : MonoBehaviour
         DateTime thisDate = DateTime.Now;
         string curTime = string.Format("{0:D2}:{1:D2}:{2:D2}", thisDate.Hour, thisDate.Minute, thisDate.Second);
 
-        logPanel.text += $"\n[{curTime}] Turn #{Global.Manager.CurrentTurn}:\n{text}\n{text2}\n{text3}\n";
-        logPanel.faceColor = new Color(1, 1, 1, 1);
+        GameObject newLogEntry = Instantiate(LogInputPrefab, logPanel.transform);
+        newLogEntry.GetComponentInChildren<TextMeshProUGUI>().text = $"[{curTime}] Turn #{Global.Match.CurrentTurn}:\n{text}\n{text2}\n{text3}";
 
-        Color startColor = logPanel.faceColor;
-        Color endColor = new Color(startColor.r, startColor.g, startColor.b, 0);
-        float fadeSpeed = 20.00f;
-        float time = 0;
+        StartCoroutine(ForceScrollDown());
 
-        while (time < fadeSpeed)
+        yield return null;
+
+        IEnumerator ForceScrollDown()
         {
-            time += Time.deltaTime;
-            logPanel.faceColor = Color.Lerp(startColor, endColor, time / fadeSpeed);
-            yield return null;
+            // Wait for end of frame AND force update all canvases before setting to bottom.
+            yield return new WaitForEndOfFrame();
+            Canvas.ForceUpdateCanvases();
+            logPanel.GetComponentInParent<ScrollRect>().verticalNormalizedPosition = 0f;
+            Canvas.ForceUpdateCanvases();
         }
-
-        logPanel.faceColor = endColor;
     }
 
     public void ShowCharacterInfo(CharacterSheet character)
@@ -694,21 +746,72 @@ public class InterfaceManager : MonoBehaviour
         TurnPanel.transform.Find("Timer").GetComponent<TextMeshProUGUI>().text = counterValue.ToString();
     }
 
-    // UI - Character Actions
+    // UI - Characters Actions
+    public void SetPlayerCharactersShotCut(MatchPlayer player)
+    {
+        for (int position = 0; position < player.characters.Count; position++)
+        {
+            CharacterSheet c = player.characters[position];
+
+            GameObject charIcon = Instantiate(c.CharIcon, playerCharactersShotcut.transform);
+            charIcon.GetComponent<Button>().onClick.AddListener(delegate { SelectCharacterForUI(c.GetId()); });
+        }
+    }
+
+    public void SelectCharacterForUI(int id)
+    {
+        // Get Character Sheed
+        characterSelectedToUI = Global.Match.InGameCharacters().Find(x => x.id == id).character;
+
+        // Sent to UI
+        UpdatePortrait(characterSelectedToUI);
+
+        // Active if is Turn Owner
+        if (characterSelectedToUI == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].character)
+        {
+            SetupActionsOwner(Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].character.controller);
+        }
+        else // Disable All Butons
+        {
+            DisableAllActions();
+        }
+    }
+
+    public void DisableAllActions()
+    {
+        foreach (Transform child in characterActions.transform)
+        {
+            child.GetComponent<Button>().onClick.RemoveAllListeners();
+            child.GetComponent<Button>().interactable = false;
+
+            // Pass Btn
+            passTurnBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+            passTurnBtn.GetComponent<Button>().interactable = false;
+        }
+    }
+
     public void SetupActionsOwner(PlayerCharacterController character)
     {
         if (!character.IsAi())
         {
+            // Clen Buttons
             foreach (Transform child in characterActions.transform)
             {
                 child.GetComponent<Button>().onClick.RemoveAllListeners();
                 child.GetComponent<Button>().interactable = true;
             }
 
+            passTurnBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+            passTurnBtn.GetComponent<Button>().interactable = true;
+
+
+            // Set Action Buttons
             characterActions.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate { character.AllowToMove(true); });
             characterActions.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate { character.AttackMelee(); });
             characterActions.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(delegate { character.AttackRange(); });
-            characterActions.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(delegate { Global.Manager.PassTurn(); });
+
+            // Set Pass Turn Button
+            passTurnBtn.GetComponent<Button>().onClick.AddListener(delegate { Global.Match.PassTurn(); });
         }
         else
         {
@@ -716,6 +819,10 @@ public class InterfaceManager : MonoBehaviour
             {
                 child.GetComponent<Button>().onClick.RemoveAllListeners();
                 child.GetComponent<Button>().interactable = false;
+
+                // Pass Btn
+                passTurnBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+                passTurnBtn.GetComponent<Button>().interactable = false;
             }
         }
     }
@@ -723,5 +830,232 @@ public class InterfaceManager : MonoBehaviour
     public void EnableActionButton(int index, bool enable)
     {
         characterActions.transform.GetChild(index).GetComponent<Button>().interactable = enable;
+    }
+
+    //
+    public void UpdatePortrait(CharacterSheet character)
+    {
+        portrait.transform.Find("CharHp").GetComponent<TextMeshProUGUI>().text = $"{character.GetCurrrentHelth()} / {character.GetHealth()}";
+        portrait.transform.Find("PortraitSprite").GetComponent<UnityEngine.UI.Image>().sprite = character.CharPortrait;
+    }
+
+    // Menu
+    public void OpenMatchMenu()
+    {
+        Global.ShowMatchMenu();
+    }
+
+    // Move Panels
+    public float ScaleFactor()
+    {
+        return Global.CanvasManager.gameObject.GetComponent<Canvas>().scaleFactor;
+    }
+
+    public IEnumerator LerpMoveObject(RectTransform rectTransform, CharacterSheet enemy, MovePanelType type, bool open)
+    {
+        float timeOfTravel = 0.4f; //time to object reach a target place 
+        float currentTime = 0; // actual floting time 
+        float normalizedValue;
+
+        rectTransform.ForceUpdateRectTransforms();
+
+        if (type == MovePanelType.leftRight)
+        {
+            if (open)
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x - (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+
+
+            }
+            else
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x + (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+
+                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
+                Debug.Log("Lerp Close Panel");
+            }
+        }
+        else if (type == MovePanelType.rightLett)
+        {
+            if (!open)
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x - (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+
+                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
+            }
+            else
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x + (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+
+                Debug.Log("Lerp Close Panel");
+            }
+        }
+        else if (type == MovePanelType.topBotton)
+        {
+            if (open)
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y - (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+
+            }
+            else
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y + (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+
+                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
+            }
+        }
+        else if (type == MovePanelType.bottonTop)
+        {
+            if (!open)
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y - (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+
+                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
+            }
+            else
+            {
+                Vector3 startPosition = rectTransform.position;
+                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y + (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
+
+                while (currentTime <= timeOfTravel)
+                {
+                    currentTime += Time.deltaTime;
+                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
+                    yield return null;
+                }
+            }
+        }
+    }    
+    
+    public void LerpCloseObject_LeftRight(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = false;
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.leftRight, false));
+    }
+
+    public void LerpOpenObject_LeftRight(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = true;
+        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
+
+        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.leftRight, true));
+    }
+
+    public void LerpCloseObject_RightLeft(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = false;
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.rightLett, false));
+    }
+
+    public void LerpOpenObject_RightLeft(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = true;
+        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
+
+        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.rightLett, true));
+    }
+
+    public void LerpCloseObject_TopBotton(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = false;
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.topBotton, false));
+    }
+
+    public void LerpOpenObject_TopBotton(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = true;
+        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
+
+        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.topBotton, true));
+    }
+
+    public void LerpCloseObject_BottonTop(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = false;
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.bottonTop, false));
+    }
+
+    public void LerpOpenObject_BottonTop(RectTransform panel)
+    {
+        panel.GetComponent<UIPanel>().isActive = true;
+        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
+
+        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
+        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.bottonTop, true));
     }
 }

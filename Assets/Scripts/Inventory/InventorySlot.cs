@@ -190,87 +190,100 @@ public class InventorySlot : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             return;
         }
 
-        int destinyIndex;
+        int destinyIndex = 0;
+        bool hasDestiny = false;
 
         try
         {
             destinyIndex = r.gameObject.transform.parent.GetSiblingIndex();
+            hasDestiny = true;
         }
         catch
         {
-            destinyIndex = Global.UI.ActiveStationInventory.Items.Count;
-        }
-
-        if (r.gameObject.transform.parent.parent == transform.parent)
-        {
-            if (r.gameObject.transform.name == "PlayerInventoryButton")
+            try
             {
-                Global.UI.CharacterInventory.ChangePosition(destinyIndex, slotID, item);
+                destinyIndex = Global.UI.ActiveStationInventory.Items.Count;
+                hasDestiny = true;
             }
-
-            if (r.gameObject.transform.name == "OtherInventoryButton")
+            catch
             {
-                Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory();
-                Global.UI.ActiveStationInventory.ChangePosition(destinyIndex, slotID, item);
-                r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
-            }
 
-            if (r.gameObject.transform.name == "HotbarButton")
-            {
-                Global.UI.CharacterHotbar.AddItem(item, destinyIndex, slotID, true);
-                //Global.manager.PlayerHotbar.RemoveItem(slotID);
             }
         }
-        else
+
+        if (hasDestiny)
         {
-            if (r.gameObject.transform.name == "PlayerInventoryButton")
+
+            if (r.gameObject.transform.parent.parent == transform.parent)
             {
-
-                Global.UI.CharacterInventory.AddItem(item);
-
-                if (slotType == MyParameters.SlotType.OtherInventory)
+                if (r.gameObject.transform.name == "PlayerInventoryButton")
                 {
-                    transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory().RemoveItem(slotID);
-                    transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                    Global.UI.CharacterInventory.ChangePosition(destinyIndex, slotID, item);
                 }
 
-                if (slotType == MyParameters.SlotType.Hotbar)
-                    Global.UI.CharacterHotbar.RemoveItem(slotID);
-
-            }
-
-            if (r.gameObject.transform.name == "OtherInventoryButton")
-            {
-                Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory();
-                Global.UI.ActiveStationInventory.AddItem(item);
-                r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
-
-                if (slotType == MyParameters.SlotType.PlayerInventory)
-                    Global.UI.CharacterInventory.RemoveItem(slotID);
-
-                if (slotType == MyParameters.SlotType.Hotbar)
-                    Global.UI.CharacterHotbar.RemoveItem(slotID);
-
-                if (slotType == MyParameters.SlotType.OtherInventory)
+                if (r.gameObject.transform.name == "OtherInventoryButton")
                 {
-                    transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory().RemoveItem(slotID);
-                    transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                    Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory();
+                    Global.UI.ActiveStationInventory.ChangePosition(destinyIndex, slotID, item);
+                    r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                }
+
+                if (r.gameObject.transform.name == "HotbarButton")
+                {
+                    Global.UI.CharacterHotbar.AddItem(item, destinyIndex, slotID, true);
+                    //Global.manager.PlayerHotbar.RemoveItem(slotID);
                 }
             }
-
-
-            if (r.gameObject.transform.name == "HotbarButton")
+            else
             {
-                Global.UI.CharacterHotbar.AddItem(item, destinyIndex, slotID, false);
+                if (r.gameObject.transform.name == "PlayerInventoryButton")
+                {
 
-                if (slotType == MyParameters.SlotType.PlayerInventory)
-                    Global.UI.CharacterInventory.RemoveItem(slotID);
+                    Global.UI.CharacterInventory.AddItem(item);
 
-                if (slotType == MyParameters.SlotType.OtherInventory)
-                    Global.UI.ActiveStationInventory.RemoveItem(slotID);
+                    if (slotType == MyParameters.SlotType.OtherInventory)
+                    {
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory().RemoveItem(slotID);
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                    }
 
+                    if (slotType == MyParameters.SlotType.Hotbar)
+                        Global.UI.CharacterHotbar.RemoveItem(slotID);
+
+                }
+
+                if (r.gameObject.transform.name == "OtherInventoryButton")
+                {
+                    Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory();
+                    Global.UI.ActiveStationInventory.AddItem(item);
+                    r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+
+                    if (slotType == MyParameters.SlotType.PlayerInventory)
+                        Global.UI.CharacterInventory.RemoveItem(slotID);
+
+                    if (slotType == MyParameters.SlotType.Hotbar)
+                        Global.UI.CharacterHotbar.RemoveItem(slotID);
+
+                    if (slotType == MyParameters.SlotType.OtherInventory)
+                    {
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory().RemoveItem(slotID);
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                    }
+                }
+
+
+                if (r.gameObject.transform.name == "HotbarButton")
+                {
+                    Global.UI.CharacterHotbar.AddItem(item, destinyIndex, slotID, false);
+
+                    if (slotType == MyParameters.SlotType.PlayerInventory)
+                        Global.UI.CharacterInventory.RemoveItem(slotID);
+
+                    if (slotType == MyParameters.SlotType.OtherInventory)
+                        Global.UI.ActiveStationInventory.RemoveItem(slotID);
+
+                }
             }
         }
     }
-
 }

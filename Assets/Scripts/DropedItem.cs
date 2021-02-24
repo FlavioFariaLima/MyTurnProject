@@ -56,13 +56,14 @@ public class DropedItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         }
     }
 
-    public void OnPointerExit(PointerEventData eventData)
-    {
-
-    }
-
     public void OnPointerEnter(PointerEventData eventData)
     {
-
+        Global.UI.SetCursor(Global.UI.cursorInteract, true);
     }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        Global.UI.SetCursor(Global.UI.LastCursor, false);
+    }
+
 }

@@ -77,7 +77,7 @@ public class AICharacterController : MonoBehaviour
     // AI Basic Turn Actions
     public void PassTurn()
     {
-        Global.Manager.TurnEnd();
+        Global.Match.TurnEnd();
         canEndTurn = false;
     }
 }
