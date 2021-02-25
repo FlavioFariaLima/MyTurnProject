@@ -82,19 +82,19 @@ namespace BehaviorDesigner.Runtime.Tasks.UltraMare
                 return null;
             }
 
-            foreach (MatchCharacter enemy in allCharacters)
+            foreach (CharacterSheet enemy in allCharacters)
             {
-                var direction = enemy.character.transform.position - this.transform.position;
+                var direction = enemy.transform.position - this.transform.position;
                 direction.y = 0;
                 var angle = Vector3.Angle(direction, transform.forward);
                 if (direction.magnitude < viewDistance && angle < fieldOfViewAngle * 0.5f)
                 {
                     // The hit agent needs to be within view of the current agent
-                    if (LineOfSight(enemy.character.gameObject) && enemy.character.GetPlayerId() != characterSheet.GetPlayerId())
+                    if (LineOfSight(enemy.gameObject) && enemy.GetPlayerId() != characterSheet.GetPlayerId())
                     {
-                        if (!characterAI.myTeam.Contains(enemy.character.transform) && !characterAI.knowEnemys.Contains(enemy.character.transform))
+                        if (!characterAI.myTeam.Contains(enemy.transform) && !characterAI.knowEnemys.Contains(enemy.transform))
                         {
-                            findEnemies.Add(enemy.character.transform);
+                            findEnemies.Add(enemy.transform);
                         }
                     }
                 }

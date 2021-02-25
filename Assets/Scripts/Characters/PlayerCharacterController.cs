@@ -306,8 +306,8 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
         if (!Global.Commands.playerIsAttacking && Global.Commands.GetSelectedCharacters()[0] != this)
         {
-            if (Global.Match.playerTurn == Global.Match.MatchPlayers[this.character.GetPlayerId()].player
-                && Global.Match.MatchPlayers[this.character.GetPlayerId()].player.GetName != "DM")
+            if (Global.Match.playerTurn == Global.Match.MatchPlayers[this.character.GetPlayerId()]
+                && Global.Match.MatchPlayers[this.character.GetPlayerId()].GetName != "DM")
             {
                 SetSelectState(true);
             }

@@ -30,12 +30,24 @@ public class CharacterSheet: MonoBehaviour
     private int currentHealth = 0;
     private bool isAlive = true;
 
+    // Match Variables
+    private int matchIniciative = -1;
+    public int MatchIniciative
+    {
+        get { return matchIniciative; }
+        set { matchIniciative = value; }
+    }
+
     private GameObject charIcon;
     public GameObject CharIcon
     {
         get { return charIcon; }
         set { charIcon = value; }
     }
+
+    public GameObject shotcutIcon;
+
+    //
 
     private void Awake()
     {
@@ -172,7 +184,14 @@ public class CharacterSheet: MonoBehaviour
 
         Debug.Log($"{GetName()} is dead!");
 
+        // Deal with Match Icons
         CharIcon.transform.GetComponent<Image>().color = new Color(1, 1, 1, 0.3f);
+
+        if(shotcutIcon)
+        {
+            shotcutIcon.transform.GetComponent<Image>().color = new Color(1, 1, 1, 0.3f);
+        }
+
         // Check if Match is Over
         Global.Match.CheckForMatchEnd();
     }

@@ -102,7 +102,7 @@ public class InterfaceManager : MonoBehaviour
 
     [Header("Match Manager")]
     [SerializeField] public GameObject TurnPanel;
-    [SerializeField] public GameObject MatchCharacterIcons;
+    [SerializeField] public GameObject CharacterSheetIcons;
     [SerializeField] public GameObject CharacterIconsPrefab;
     [SerializeField] public GameObject EndMatch;
     [SerializeField] private GameObject passTurnBtn;
@@ -112,7 +112,7 @@ public class InterfaceManager : MonoBehaviour
 
     [Header("Menu and Stuff")]
     [SerializeField] private GameObject matchMenu;
-    [SerializeField] private GameObject playerCharactersShotcut;
+    [SerializeField] public GameObject playerCharactersShotcut;
 
     [Header("Cursors")]
     [SerializeField] public Texture2D cursorDefault;
@@ -751,29 +751,19 @@ public class InterfaceManager : MonoBehaviour
     }
 
     // UI - Characters Actions
-    public void SetPlayerCharactersShotCut(MatchPlayer player)
-    {
-        for (int position = 0; position < player.matchCharacters.Count; position++)
-        {
-            CharacterSheet c = player.matchCharacters[position].character;
-
-            GameObject charIcon = Instantiate(c.CharIcon, playerCharactersShotcut.transform);
-            charIcon.GetComponent<Button>().onClick.AddListener(delegate { SelectCharacterForUI(c.GetId()); });
-        }
-    }
 
     public void SelectCharacterForUI(int id)
     {
         // Get Character Sheed
-        characterSelectedToUI = Global.Match.InGameCharacters().Find(x => x.id == id).character;
+        characterSelectedToUI = Global.Match.InGameCharacters().Find(x => x.GetId() == id);
 
         // Sent to UI
         UpdatePortrait(characterSelectedToUI);
 
         // Active if is Turn Owner
-        if (characterSelectedToUI == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].character)
+        if (characterSelectedToUI == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId])
         {
-            SetupActionsOwner(Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].character.controller);
+            SetupActionsOwner(Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].controller);
         }
         else // Disable All Butons
         {

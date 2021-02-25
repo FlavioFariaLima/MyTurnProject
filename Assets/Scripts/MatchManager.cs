@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[Serializable]
 public class MatchManager : MonoBehaviour
 {
     [Header("Temporary")]
@@ -13,13 +15,13 @@ public class MatchManager : MonoBehaviour
     public Player playerTurn;
 
     [Header("Players and Characters")]
-    private Dictionary<int, MatchPlayer> matchPlayers = new Dictionary<int, MatchPlayer>(); // Identify the players
-    public Dictionary<int, MatchPlayer> MatchPlayers
+    private Dictionary<int, Player> matchPlayers = new Dictionary<int, Player>(); // Identify the players
+    public Dictionary<int, Player> MatchPlayers
     {
         get { return matchPlayers; }
     }
 
-    private List<MatchCharacter> inGameCharacters; // All Characters in the game, players and IA
+    [SerializeField] private List<CharacterSheet> inGameCharacters; // All Characters in the game, players and IA
     private List<int> iniciativeResults;
 
     [Header("Turn Information")]
@@ -37,22 +39,17 @@ public class MatchManager : MonoBehaviour
     {
         get { return turnsCount + 1; }
     }
-    private MatchCharacter characterRound;
+    private CharacterSheet characterRound;
 
     private bool matchEnd = false;
 
-    // MainP Player
-    private MatchPlayer mainPlayer;
+    [Header("Match Control")]
+    [SerializeField] private Player mainPlayer;
 
     // Get/Set Variables
-    public List<MatchCharacter> InGameCharacters()
+    public List<CharacterSheet> InGameCharacters()
     {
         return inGameCharacters;
-    }
-
-
-    private void Awake()
-    {
     }
 
     // Start is called before the first frame update
@@ -63,8 +60,7 @@ public class MatchManager : MonoBehaviour
 
         FindMatchPlayers();
 
-        mainPlayer = matchPlayers[1];
-        Global.UI.SetPlayerCharactersShotCut(mainPlayer);
+        SetPlayerCharactersShotCut(mainPlayer);
     }
 
     // Update is called once per frame
@@ -81,11 +77,11 @@ public class MatchManager : MonoBehaviour
 
         if (!matchEnd)
         {
-            foreach (MatchPlayer p in matchPlayers.Values)
+            foreach (Player p in matchPlayers.Values)
             {
-                foreach (MatchCharacter c in p.matchCharacters)
+                foreach (CharacterSheet c in p.PlayerCharacters)
                 {
-                    if (c.character.IsAlive())
+                    if (c.IsAlive())
                         hasCharacters[pCount] = true;
                 }
 
@@ -115,94 +111,64 @@ public class MatchManager : MonoBehaviour
 
     private void SetupCharacterController()
     {
-        inGameCharacters[turnOwnerId].character.controller.ResetActions();
-        Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerId].character.controller);
-        Global.UI.UpdatePortrait(inGameCharacters[turnOwnerId].character);
+        inGameCharacters[turnOwnerId].controller.ResetActions();
+        Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerId].controller);
+        Global.UI.UpdatePortrait(inGameCharacters[turnOwnerId]);
+        Global.UI.DisableAllActions();
 
-        if (inGameCharacters[turnOwnerId].character.controller.IsAi() && inGameCharacters[turnOwnerId].character.controller.GetPlayerAI() == null)
+        if (inGameCharacters[turnOwnerId].controller.IsAi() && inGameCharacters[turnOwnerId].controller.GetPlayerAI() == null)
         {
-            StartCoroutine(inGameCharacters[turnOwnerId].character.controller.StartAI());
+            StartCoroutine(inGameCharacters[turnOwnerId].controller.StartAI());
         }
 
-        if (!inGameCharacters[turnOwnerId].character.controller.IsAi())
+        if (!inGameCharacters[turnOwnerId].controller.IsAi())
         {
-            inGameCharacters[turnOwnerId].character.controller.SetSelectState(true);
+            inGameCharacters[turnOwnerId].controller.SetSelectState(true);
         }
         else
         {
-            inGameCharacters[turnOwnerId].character.controller.GetPlayerAI().CanEndTurn(true);
-            inGameCharacters[turnOwnerId].character.controller.SetSelectState(true);
+            inGameCharacters[turnOwnerId].controller.GetPlayerAI().CanEndTurn(true);
+            inGameCharacters[turnOwnerId].controller.SetSelectState(true);
         }
 
-        playerTurn = matchPlayers[inGameCharacters[turnOwnerId].character.GetPlayerId()].player;
+        if (inGameCharacters[turnOwnerId].GetPlayerId() == mainPlayer.GetId())
+        {
+            Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerId].controller);
+        }
 
-        UpdateIconStatus(inGameCharacters[turnOwnerId].character, true);
+        playerTurn = matchPlayers[inGameCharacters[turnOwnerId].GetPlayerId()];
+
+        UpdateIconStatus(inGameCharacters[turnOwnerId], true);
     }
 
     /// <summary>
     /// Lets set the players and the characters in the match
     /// </summary>
-    async Task<Dictionary<int, MatchPlayer>> FindMatchPlayers()
+    async Task<Dictionary<int, Player>> FindMatchPlayers()
     {
         //Debug.Log("Step 1 - Setting Players..."); 
 
         Task findAllPlayers = Task.Run(() =>
         {
-            matchPlayers = new Dictionary<int, MatchPlayer>();
+            matchPlayers = new Dictionary<int, Player>();
+            inGameCharacters = new List<CharacterSheet>();
 
             for ( int p = 0; p < tempPlayers.Count; p++)
             {
                 // Add Players to the Match
-                MatchPlayer newPlayer = new MatchPlayer(tempPlayers[p], tempPlayers[p].PlayerCharacters);
+                matchPlayers.Add(tempPlayers[p].GetId(), tempPlayers[p]);
 
-                matchPlayers.Add(tempPlayers[p].GetId(), newPlayer);
+                foreach(CharacterSheet c in tempPlayers[p].PlayerCharacters)
+                {
+                    inGameCharacters.Add(c);
+                }
             }
-
         });
         findAllPlayers.Wait();
-
-        //Debug.Log("Step 2 - Setting Characters...");
-        // Find Players Characters
-        Task findPlayersCharacters = Task.Run(() =>
-        {
-            //Debug.Log("Number of Players: " + matchPlayers.Count);
-            inGameCharacters = new List<MatchCharacter>();
-
-            foreach (MatchPlayer mp in matchPlayers.Values)
-            {
-                //Debug.Log(mp.player.GetName + ", has #" + mp.characters.Count);
-
-                List<MatchCharacter> matchChars = new List<MatchCharacter>();
-
-                foreach (CharacterSheet c in mp.characters)
-                {
-                    MatchCharacter newChar = new MatchCharacter(mp, c, c.GetId(), 0);
-
-                    // Define if character is AI
-                    if (newChar.player.player.GetName == "DM")
-                    {
-                        newChar.character.controller.CharacterIsAI(true);
-                    }
-                    else
-                    {
-                        newChar.character.controller.CharacterIsAI(false);
-                    }
-
-                    inGameCharacters.Add(newChar);
-                    matchChars.Add(newChar);
-                }
-
-                mp.matchCharacters = matchChars;
-            }
-
-            //Debug.Log($"Char Count = {inGameCharacters.Count}");
-        });
-
-        findPlayersCharacters.Wait();
         //Debug.Log("Done!");
 
-        //Debug.Log("Setting First Round...");
         // Setup First Round
+        //Debug.Log("Setting First Round...");
         SettingFirstRound();
 
         return matchPlayers;
@@ -216,38 +182,58 @@ public class MatchManager : MonoBehaviour
     {        
         turnsCount = 0;
         turnOwnerId = 0;
-        inGameCharacters = MatchEvents.RollIniciatives(inGameCharacters);
-
-        for (int position = 0; position < inGameCharacters.Count; position++)
-        {
-            GameObject charIcon = Instantiate(Global.UI.CharacterIconsPrefab, Global.UI.MatchCharacterIcons.transform);
-
-            int p = position;
-
-            charIcon.GetComponent<Button>().onClick.AddListener(delegate { MoveCameraToCharacter(p); });
-
-            charIcon.transform.Find("Name").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].character.GetName();
-            charIcon.transform.Find("Portrait").GetComponent<Image>().sprite = inGameCharacters[position].character.CharPortrait;
-            charIcon.transform.Find("Iniciative").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].iniciative.ToString();
-            charIcon.transform.Find("HealthBar").GetComponent<Slider>().maxValue = inGameCharacters[position].character.GetHealth();
-            charIcon.transform.Find("HealthBar").GetComponent<Slider>().value = inGameCharacters[position].character.GetHealth();
-
-            inGameCharacters[position].character.CharIcon = charIcon;
-        }
-
+        SetupCharactersOrderAndIcons();
         characterRound = inGameCharacters[turnOwnerId]; // Set the first player to play
 
         // Show Character Information
-        Global.UI.ShowCharacterInfo(characterRound.character);
+        Global.UI.ShowCharacterInfo(characterRound);
 
         //Debug.Log("Starting Match...");
         // Starting Match
         StartCoroutine(TurnStart());
     }
 
+    public void SetupCharactersOrderAndIcons()
+    {
+        inGameCharacters = MatchEvents.RollIniciatives(inGameCharacters);
+
+        for (int position = 0; position < inGameCharacters.Count; position++)
+        {
+            GameObject charIcon = Instantiate(Global.UI.CharacterIconsPrefab, Global.UI.CharacterSheetIcons.transform);
+
+            int p = position;
+
+            charIcon.GetComponent<Button>().onClick.AddListener(delegate { MoveCameraToCharacter(p); });
+
+            charIcon.transform.Find("Name").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].GetName();
+            charIcon.transform.Find("Portrait").GetComponent<Image>().sprite = inGameCharacters[position].CharPortrait;
+            charIcon.transform.Find("Health").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].GetCurrrentHelth().ToString();
+            charIcon.transform.Find("HealthBar").GetComponent<Slider>().maxValue = inGameCharacters[position].GetHealth();
+            charIcon.transform.Find("HealthBar").GetComponent<Slider>().value = inGameCharacters[position].GetCurrrentHelth();
+            charIcon.transform.Find("Iniciative").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].MatchIniciative.ToString();
+            charIcon.transform.Find("AC").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].GetArmour().ToString();
+
+            inGameCharacters[position].CharIcon = charIcon;
+        }
+    }
+
+    public void SetPlayerCharactersShotCut(Player player)
+    {
+        for (int position = 0; position < player.PlayerCharacters.Count; position++)
+        {
+            CharacterSheet c = player.PlayerCharacters[position];
+
+            GameObject charIcon = Instantiate(c.CharIcon, Global.UI.playerCharactersShotcut.transform);
+            charIcon.GetComponent<Button>().onClick.AddListener(delegate { Global.UI.SelectCharacterForUI(c.GetId()); });
+
+            c.shotcutIcon = charIcon.gameObject;
+        }
+    }
+
     public void UpdateIconHealthBar(CharacterSheet character)
     {
         character.CharIcon.transform.Find("HealthBar").GetComponent<Slider>().value = character.GetCurrrentHelth();
+        character.CharIcon.transform.Find("Health").GetComponent<TextMeshProUGUI>().text = character.GetCurrrentHelth().ToString();
     }
 
     public void UpdateIconStatus(CharacterSheet character, bool active)
@@ -264,11 +250,11 @@ public class MatchManager : MonoBehaviour
 
     public void MoveCameraToCharacter(int index)
     {
-        Vector3 p = inGameCharacters[index].character.controller.characterPosition;
+        Vector3 p = inGameCharacters[index].controller.characterPosition;
         StartCoroutine(Global.UI.mainCamera.GoToCharacter(p));
 
         // Show Character Information
-        Global.UI.ShowCharacterInfo(inGameCharacters[index].character);
+        Global.UI.ShowCharacterInfo(inGameCharacters[index]);
 
         Debug.Log($"Go to Position: {p}");
     }
@@ -320,7 +306,7 @@ public class MatchManager : MonoBehaviour
     IEnumerator TurnRolling()
     {
         Global.UI.TurnPanel.transform.Find("PlayerTurn").GetComponent<TextMeshProUGUI>().text = $"Round {turnsCount + 1}";
-        characterRound.character.isMyTurn = true;
+        characterRound.isMyTurn = true;
 
         float totalTime = turnDuration;
         while (totalTime >= 0)
@@ -364,14 +350,14 @@ public class MatchManager : MonoBehaviour
         else
             turnOwnerId++;
 
-        if (!inGameCharacters[turnOwnerId].character.IsAlive())
+        if (!inGameCharacters[turnOwnerId].IsAlive())
         {
             TurnEnd();
             return;
         }
 
-        UpdateIconStatus(characterRound.character, false);
-        characterRound.character.isMyTurn = false; // Its not this character turn anymore
+        UpdateIconStatus(characterRound, false);
+        characterRound.isMyTurn = false; // Its not this character turn anymore
         characterRound = inGameCharacters[turnOwnerId]; // Change to next character
 
         // Counting Rounds
@@ -387,34 +373,17 @@ public class MatchManager : MonoBehaviour
     }
 }
 
-public class MatchPlayer
-{
-    public int id;
-    public Player player;
-    public List<CharacterSheet> characters;
-    public List<MatchCharacter> matchCharacters;
+//[Serializable]
+//public class MatchPlayer
+//{
+//    public int id;
+//    public Player player;
+//    public List<CharacterSheet> characters;
 
-    public MatchPlayer (Player player, List<CharacterSheet> playerChars)
-    {
-        this.id = player.GetId();
-        this.player = player;
-        this.characters = playerChars;
-    }
-}
-
-public class MatchCharacter
-{
-    public MatchPlayer player;
-    public CharacterSheet character;
-    public int id;
-    public int iniciative;
-
-    public MatchCharacter(MatchPlayer p, CharacterSheet c, int charId, int ini)
-    {
-        this.player = p;
-        this.character = c;
-        this.id = charId;
-        this.iniciative = ini;
-    }
-
-}
+//    public MatchPlayer (Player player, List<CharacterSheet> playerChars)
+//    {
+//        this.id = player.GetId();
+//        this.player = player;
+//        this.characters = playerChars;
+//    }
+//}

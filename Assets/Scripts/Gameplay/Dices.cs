@@ -20,16 +20,16 @@ public static class Dices
 
 public static class MatchEvents
 {
-    public static List<MatchCharacter> RollIniciatives(List<MatchCharacter> characters)
+    public static List<CharacterSheet> RollIniciatives(List<CharacterSheet> characters)
     {
-        List<MatchCharacter> sortedList = characters;
+        List<CharacterSheet> sortedList = characters;
 
-        foreach (MatchCharacter c in sortedList)
+        foreach (CharacterSheet c in sortedList)
         {
-            c.iniciative = Dices.RollDices(20, 0)[1];
+            c.MatchIniciative = Dices.RollDices(20, 0)[1];
         }
 
-        sortedList = sortedList.OrderByDescending(w => w.iniciative).ToList();
+        sortedList = sortedList.OrderByDescending(w => w.MatchIniciative).ToList();
 
         return sortedList;
 
