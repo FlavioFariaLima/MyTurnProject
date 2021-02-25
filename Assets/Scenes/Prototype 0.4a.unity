@@ -15687,7 +15687,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 18.349976, y: 13.12}
+  m_AnchoredPosition: {x: 18.350098, y: 13.119995}
   m_SizeDelta: {x: 490.3009, y: 137.37727}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &640056195
@@ -32940,6 +32940,7 @@ MonoBehaviour:
   cursorMove: {fileID: 2800000, guid: 81c11de65c5451d41a9a0eb359e343b5, type: 3}
   cursorMelee: {fileID: 2800000, guid: c012ad47ffcd4ce41b0f04ee61686d04, type: 3}
   cursorRange: {fileID: 2800000, guid: a88530dc1ae5dc44fbf1df0543e99ebf, type: 3}
+  popupTextPrefab: {fileID: 7074895513308432124, guid: 8f32978c94fa5384388ca5e441688db9, type: 3}
 --- !u!114 &1300252278
 MonoBehaviour:
   m_ObjectHideFlags: 0

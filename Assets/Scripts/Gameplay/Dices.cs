@@ -11,7 +11,7 @@ public static class Dices
         int result = Random.Range(1, dice);
         int finalResult = result + bonus;
 
-        //                          dice result, dice + bonus
+        //                         dice result, dice + bonus
         int[] resultArray = new int[] { result, finalResult, dice, bonus };
 
         return resultArray;

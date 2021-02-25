@@ -83,9 +83,9 @@ public class MatchManager : MonoBehaviour
         {
             foreach (MatchPlayer p in matchPlayers.Values)
             {
-                foreach (CharacterSheet c in p.characters)
+                foreach (MatchCharacter c in p.matchCharacters)
                 {
-                    if (c.IsAlive())
+                    if (c.character.IsAlive())
                         hasCharacters[pCount] = true;
                 }
 
@@ -151,9 +151,11 @@ public class MatchManager : MonoBehaviour
             matchPlayers = new Dictionary<int, MatchPlayer>();
 
             for ( int p = 0; p < tempPlayers.Count; p++)
-            {                
+            {
                 // Add Players to the Match
-                matchPlayers.Add(tempPlayers[p].GetId(), new MatchPlayer(tempPlayers[p], tempPlayers[p].PlayerCharacters));
+                MatchPlayer newPlayer = new MatchPlayer(tempPlayers[p], tempPlayers[p].PlayerCharacters);
+
+                matchPlayers.Add(tempPlayers[p].GetId(), newPlayer);
             }
 
         });
@@ -170,6 +172,7 @@ public class MatchManager : MonoBehaviour
             {
                 //Debug.Log(mp.player.GetName + ", has #" + mp.characters.Count);
 
+                List<MatchCharacter> matchChars = new List<MatchCharacter>();
 
                 foreach (CharacterSheet c in mp.characters)
                 {
@@ -186,7 +189,10 @@ public class MatchManager : MonoBehaviour
                     }
 
                     inGameCharacters.Add(newChar);
+                    matchChars.Add(newChar);
                 }
+
+                mp.matchCharacters = matchChars;
             }
 
             //Debug.Log($"Char Count = {inGameCharacters.Count}");
@@ -220,17 +226,13 @@ public class MatchManager : MonoBehaviour
 
             charIcon.GetComponent<Button>().onClick.AddListener(delegate { MoveCameraToCharacter(p); });
 
-            charIcon.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].character.GetName();
-            charIcon.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].iniciative.ToString();
-            charIcon.transform.GetChild(2).GetComponent<Slider>().maxValue = inGameCharacters[position].character.GetHealth();
-            charIcon.transform.GetChild(2).GetComponent<Slider>().value = inGameCharacters[position].character.GetHealth();
-
-            // Portrait
-            charIcon.transform.GetComponent<Image>().sprite = inGameCharacters[position].character.CharPortrait;
+            charIcon.transform.Find("Name").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].character.GetName();
+            charIcon.transform.Find("Portrait").GetComponent<Image>().sprite = inGameCharacters[position].character.CharPortrait;
+            charIcon.transform.Find("Iniciative").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].iniciative.ToString();
+            charIcon.transform.Find("HealthBar").GetComponent<Slider>().maxValue = inGameCharacters[position].character.GetHealth();
+            charIcon.transform.Find("HealthBar").GetComponent<Slider>().value = inGameCharacters[position].character.GetHealth();
 
             inGameCharacters[position].character.CharIcon = charIcon;
-
-
         }
 
         characterRound = inGameCharacters[turnOwnerId]; // Set the first player to play
@@ -245,7 +247,7 @@ public class MatchManager : MonoBehaviour
 
     public void UpdateIconHealthBar(CharacterSheet character)
     {
-        character.CharIcon.transform.GetChild(2).GetComponent<Slider>().value = character.GetCurrrentHelth();
+        character.CharIcon.transform.Find("HealthBar").GetComponent<Slider>().value = character.GetCurrrentHelth();
     }
 
     public void UpdateIconStatus(CharacterSheet character, bool active)
@@ -256,7 +258,7 @@ public class MatchManager : MonoBehaviour
         }
         else
         {
-            character.CharIcon.transform.GetComponent<Image>().color = new Color(1, 1, 1, 1);
+            character.CharIcon.transform.GetComponent<Image>().color = new Color(0, 0, 0, 1);
         }
     }
 
@@ -390,6 +392,7 @@ public class MatchPlayer
     public int id;
     public Player player;
     public List<CharacterSheet> characters;
+    public List<MatchCharacter> matchCharacters;
 
     public MatchPlayer (Player player, List<CharacterSheet> playerChars)
     {
@@ -415,5 +418,3 @@ public class MatchCharacter
     }
 
 }
-
-

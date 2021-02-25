@@ -75,36 +75,6 @@ namespace BehaviorDesigner.Runtime.Tasks.UltraMare
         {
             List<Transform> findEnemies = new List<Transform>();
 
-            //RaycastHit hit;
-            //Quaternion startingAngle = Quaternion.AngleAxis(-70, Vector3.up);
-            //Quaternion stepAngle = Quaternion.AngleAxis(5, Vector3.up);
-
-            //var angle = transform.rotation * startingAngle;
-            //var direction = angle * Vector3.forward;
-            //var pos = transform.position;
-
-            //for (var i = 0; i < 24; i++)
-            //{
-            //    if (Physics.Raycast(pos, direction, out hit, 500))
-            //    {
-            //        var enemy = hit.collider.GetComponent<CharacterSheet>();
-
-            //        if (enemy)
-            //        {
-            //            if (!characterAI.myTeam.Contains(enemy.transform) && !characterAI.knowEnemys.Contains(enemy.transform))
-            //            {
-            //                findEnemies.Add(enemy.transform);
-            //            }
-            //        }
-            //    }
-
-            //    direction = stepAngle * direction;
-            //}
-
-            //return findEnemies;
-            ////
-            ///
-
             var allCharacters = Global.Match.InGameCharacters();
 
             if (allCharacters == null)

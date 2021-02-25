@@ -121,6 +121,10 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] public Texture2D cursorMelee;
     [SerializeField] public Texture2D cursorRange;
 
+    [Header("Misc")]
+    // Float Stats
+    [SerializeField] public GameObject popupTextPrefab;
+
     private Texture2D lastCursor;
     public Texture2D LastCursor
     {
@@ -749,9 +753,9 @@ public class InterfaceManager : MonoBehaviour
     // UI - Characters Actions
     public void SetPlayerCharactersShotCut(MatchPlayer player)
     {
-        for (int position = 0; position < player.characters.Count; position++)
+        for (int position = 0; position < player.matchCharacters.Count; position++)
         {
-            CharacterSheet c = player.characters[position];
+            CharacterSheet c = player.matchCharacters[position].character;
 
             GameObject charIcon = Instantiate(c.CharIcon, playerCharactersShotcut.transform);
             charIcon.GetComponent<Button>().onClick.AddListener(delegate { SelectCharacterForUI(c.GetId()); });
@@ -874,8 +878,6 @@ public class InterfaceManager : MonoBehaviour
                     rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
                     yield return null;
                 }
-
-
             }
             else
             {

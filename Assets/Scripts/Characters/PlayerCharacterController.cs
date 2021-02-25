@@ -61,9 +61,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     private bool mouseIsOver;
     [SerializeField] private TextMeshPro infoName;
 
-    // Enemy Selection
-    private CharacterSheet selectedEnemy;
-
     public bool CanAct
     {
         get { return canAct; }
@@ -125,97 +122,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             {
             }
         }
-    }
-
-    private void OnMouseUp()
-    {
-        //if (isAI)
-        //{
-        //    selectedEnemy = this.character;
-        //    StartCoroutine(Global.UI.LerpMoveObject(Global.UI.enemyInfo, this.character, MovePanelType.leftRight, true));
-
-        //}
-
-        if (!Global.Commands.playerIsAttacking && Global.Commands.GetSelectedCharacters()[0] != this)
-        {
-            if (Global.Match.playerTurn == Global.Match.MatchPlayers[this.character.GetPlayerId()].player
-                && Global.Match.MatchPlayers[this.character.GetPlayerId()].player.GetName != "DM")
-            {
-                SetSelectState(true);
-            }
-
-            // Show Character Information
-            Global.UI.ShowCharacterInfo(character);
-        }
-        else
-        {
-            if (Global.Commands.GetSelectedCharacters()[0].transform != this.character.transform)
-            {
-                Global.Commands.GetSelectedCharacters()[0].AttackEnemy(this.character, Global.Commands.attackType);
-                Global.Commands.playerIsAttacking = false;
-
-            }
-
-            Global.UI.characterSheet.controller.canAttack = false;
-        }
-
-        Global.UI.SelectCharacterForUI(this.character.GetId());
-
-    }
-
-    private void OnMouseEnter()
-    {
-        mouseIsOver = true;
-        InfoUI(true);
-
-        if (Global.Commands.playerIsAttacking && !isAI && !selectState)
-        {
-            float distance = Vector3.Distance(Global.Commands.GetSelectedCharacters()[0].transform.position, this.transform.position);
-            Global.UI.distanceInfo.text = $"{Math.Round(distance, 1)}";
-            Global.UI.distanceInfo.rectTransform.position = Input.mousePosition;
-            Global.UI.distanceInfo.gameObject.SetActive(true);
-            canShoot = true;
-
-            Debug.Log("Mouse Over Enemy!");
-        }
-        else
-        {
-            canShoot = false;
-        }
-    }
-
-    private void OnMouseExit()
-    {
-        mouseIsOver = false;
-        InfoUI(false);
-
-        if (Global.Commands.playerIsAttacking)
-        {
-            Global.UI.distanceInfo.gameObject.SetActive(false);
-            canShoot = true;
-        }
-    }
-
-    private void InfoUI(bool active)
-    {
-        if (active)
-        {
-            infoName.gameObject.SetActive(true);
-            FaceTextMeshToCamera();
-        }
-        else
-        {
-            infoName.gameObject.SetActive(false);
-        }
-    }
-
-    private void FaceTextMeshToCamera()
-    {
-        Vector3 origRot = infoName.transform.eulerAngles;
-        infoName.transform.LookAt(transform.position + Camera.main.transform.rotation * Vector3.forward,
-             Camera.main.transform.rotation * Vector3.up);
-        origRot.y = infoName.transform.eulerAngles.y;
-        infoName.transform.eulerAngles = origRot;
     }
 
     // Selected State
@@ -325,15 +231,163 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         return remainingDistance <= arriveDistance;
     }
 
+    // UI
+    private IEnumerator InfoUI()
+    {
+        while (mouseIsOver)
+        {
+            infoName.gameObject.SetActive(true);
+            FaceTextMeshToCamera(infoName.transform);
+
+            yield return null;
+        }
+
+        infoName.gameObject.SetActive(false);
+    }
+
+    private IEnumerator PopFloatText(Transform parent, string atkText, string dmgText)
+    {
+        string popText = $"{atkText}";
+
+        if (dmgText != string.Empty)
+        {
+            popText += $"({dmgText})";
+        }
+
+        float timeOfTravel = 1f; //time to object reach a target place 
+        float currentTime = 0; // actual floting time 
+        float normalizedValue;
+
+        Color color_i = new Color(0.5f, 0, 0, 1);
+        Color color_f = new Color(1, 1, 1, 1);
+
+        Vector3 initialOffset = new Vector3(parent.position.x, 1, parent.position.z);
+        Vector3 finalOffset = new Vector3(parent.position.x, 2.5f, parent.position.z);
+
+        GameObject floatText = Instantiate(Global.UI.popupTextPrefab, new Vector3(parent.position.x, 1, parent.position.z), parent.rotation, parent);
+        floatText.GetComponent<TextMeshPro>().text = popText;
+
+        while (currentTime <= timeOfTravel)
+        {
+            currentTime += Time.deltaTime;
+            normalizedValue = currentTime / timeOfTravel; // we normalize our time 
+
+            //lerp factor is from 0 to 1, so we use (FadeExitTime-Time.time)/fadeDuration
+            floatText.transform.position = Vector3.Lerp(initialOffset, finalOffset, normalizedValue);
+            floatText.GetComponent<TextMeshPro>().color = Color.Lerp(color_i, color_f, normalizedValue);
+
+            FaceTextMeshToCamera(floatText.transform);
+
+            yield return null;
+        }
+
+        Destroy(floatText);
+    }
+
+    private void FaceTextMeshToCamera(Transform obj)
+    {
+        Vector3 origRot = obj.eulerAngles;
+
+        obj.LookAt(obj.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+
+        origRot.y = obj.eulerAngles.y;
+        obj.eulerAngles = origRot;
+    }
+
     // Mouse Methods
+    private void OnMouseUp()
+    {
+        //if (isAI)
+        //{
+        //    selectedEnemy = this.character;
+        //    StartCoroutine(Global.UI.LerpMoveObject(Global.UI.enemyInfo, this.character, MovePanelType.leftRight, true));
+
+        //}
+
+        if (!Global.Commands.playerIsAttacking && Global.Commands.GetSelectedCharacters()[0] != this)
+        {
+            if (Global.Match.playerTurn == Global.Match.MatchPlayers[this.character.GetPlayerId()].player
+                && Global.Match.MatchPlayers[this.character.GetPlayerId()].player.GetName != "DM")
+            {
+                SetSelectState(true);
+            }
+
+            // Show Character Information
+            Global.UI.ShowCharacterInfo(character);
+            Global.UI.SelectCharacterForUI(this.character.GetId());
+        }
+        else
+        {
+            if (Global.Commands.GetSelectedCharacters()[0].transform != this.character.transform)
+            {
+                Global.Commands.GetSelectedCharacters()[0].AttackEnemy(this.character, Global.Commands.attackType);
+                Global.Commands.playerIsAttacking = false;
+
+            }
+            else
+            {
+                Global.UI.SelectCharacterForUI(this.character.GetId());
+            }
+
+            Global.UI.characterSheet.controller.canAttack = false;
+        }
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
+        mouseIsOver = true;
+        StartCoroutine(InfoUI());
         transform.GetComponentInChildren<Renderer>().material.EnableKeyword("_EMISSION");
+
+        if (Global.Commands.playerIsAttacking && !isAI && !selectState)
+        {
+            float distance = Vector3.Distance(Global.Commands.GetSelectedCharacters()[0].transform.position, this.transform.position);
+            Global.UI.distanceInfo.text = $"{Math.Round(distance, 1)}";
+            Global.UI.distanceInfo.rectTransform.position = Input.mousePosition;
+            Global.UI.distanceInfo.gameObject.SetActive(true);
+            canShoot = true;
+
+            Debug.Log("Mouse Over Enemy!");
+        }
+        else
+        {
+            canShoot = false;
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
-    {
+    { 
+        mouseIsOver = false;
+        StartCoroutine(InfoUI());
         transform.GetComponentInChildren<Renderer>().material.DisableKeyword("_EMISSION");
+
+        if (Global.Commands.playerIsAttacking)
+        {
+            Global.UI.distanceInfo.gameObject.SetActive(false);
+            canShoot = true;
+        }
+    }
+
+    public IEnumerator LookAtMouseDirection()
+    {
+        while (canAttack)
+        {
+            Ray camRay = cam.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            LayerMask myLayer = LayerMask.GetMask("Terrain", "Character", "Default");
+
+            if (Physics.Raycast(camRay, out hit, 100f, myLayer))
+            {
+                Vector3 target = hit.point;
+                target.y = 0;
+
+                transform.LookAt(target, Vector3.up);
+
+            }
+
+            yield return null;
+        }
     }
 
     // Locomotion Methods
@@ -442,7 +496,8 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         float duration = 1f;
         float elapsed = 0;
         Vector3 direction = target.position - transform.position;
-        Quaternion toRotation = Quaternion.FromToRotation(transform.forward, direction);       
+        Quaternion toRotation = Quaternion.FromToRotation(transform.forward, direction);
+        toRotation.y = 0f;
 
         float angle = Vector3.Angle((target.position - transform.position), transform.forward);
 
@@ -550,7 +605,16 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                 enemy.TakeDamage(dmgResult[1], character);
                 attackConclusion = "Hit Attack";
                 hasDamage = $"Damage Roll: 1d{dmgResult[2]} ({dmgResult[0]} {bonusSymbolDmg} {dmgResult[3]}) = {dmgResult[1]}";
-                Debug.Log($"Attacking!");
+
+                // Float Text
+                StartCoroutine(PopFloatText(enemy.transform, $"{attackResult[1]}", $"{dmgResult[1]}"));
+
+                //Debug.Log($"Pass AC!");
+            }
+            else
+            {
+                // Float Text
+                StartCoroutine(PopFloatText(enemy.transform, $"{attackResult[1]}", string.Empty));
             }
 
             // Enemy Now Know Your Position
@@ -716,7 +780,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             transform.LookAt(new Vector3(pointToLook.x, transform.position.y, pointToLook.z));
         }
-
     }
 
     // Actions Menu
@@ -803,29 +866,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         if (isAI && AI != null)
         {
             AI.CanAct(true);
-        }
-    }
-
-    // Misc
-    public IEnumerator LookAtMouseDirection()
-    {
-        while (canAttack)
-        {
-            Ray camRay = cam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-
-            LayerMask myLayer = LayerMask.GetMask("Terrain", "Character", "Default");
-
-            if (Physics.Raycast(camRay, out hit, 100f, myLayer))
-            {
-                //cursor.SetActive(true);
-                //cursor.transform.position = hit.point + Vector3.up * 0.1f;
-                //transform.rotation = Quaternion.LookRotation(hit.point, Vector3.up);
-                transform.LookAt(hit.point, Vector3.up);
-
-            }
-
-            yield return null;
         }
     }
 }
