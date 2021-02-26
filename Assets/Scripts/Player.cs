@@ -7,11 +7,23 @@ public class Player : MonoBehaviour
     [SerializeField] private string playerName;
     [SerializeField] private int playerId;
     [SerializeField] private List<CharacterSheet> playerCharacters;
+    [SerializeField] private bool playerIsAI;
+
+    public bool PlayerIsAI
+    {
+        get { return playerIsAI; }
+    }
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-      
+        if (playerIsAI)
+        {
+            foreach(Transform child in transform)
+            {
+                child.GetComponent<AICharacterController>().StartAI(child.GetComponent<PlayerCharacterController>(), child.GetComponent<CharacterSheet>());
+            }
+        }
     }
 
     // Update is called once per frame

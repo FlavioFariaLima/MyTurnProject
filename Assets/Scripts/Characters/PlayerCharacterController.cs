@@ -36,7 +36,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     public float arriveDistance = 1.5f;
 
     // AI
-    private bool isAI;
+    [SerializeField] private bool isAI;
     private AICharacterController AI = null;
 
     [Header("ProjectilePath")]
@@ -71,10 +71,40 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         get { return canMove; }
     }
 
+    public bool CheckMovement()
+    {
+        if (hasMoved < character.GetMovement())
+        {
+            return true;
+        }
+        else
+        {
+            Global.UI.DisableActionBtn(0);
+            Global.UI.DisableActionBtn(3);
+            return false;
+        }
+    }
+
     public float HasMoved
     {
         get { return hasMoved; }
     }
+
+    public bool CheckAttacks()
+    {
+        if (character.NumberOfAttack < character.TotalAttacks)
+        {
+            return true;
+        }
+        else
+        {
+            canMove = false;
+            Global.UI.DisableActionBtn(1);
+            Global.UI.DisableActionBtn(2);
+            return false;
+        }
+    }
+
 
     public NavMeshAgent CharacterAgent
     {
@@ -187,7 +217,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     }
 
     // AI Control
-    public void CharacterIsAI(bool ai)
+    public void IsAi(bool ai)
     {
         isAI = ai;       
     }
@@ -204,7 +234,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             if (AI == null)
             {
                 AI = this.gameObject.GetComponent<AICharacterController>();
-                AI.StartAITurn(this, character);
+                AI.StartAI(this, character);
             }
 
             while (character.isMyTurn)
@@ -440,7 +470,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                     }
                     else if (destinationCreature != null)
                     {
-                        //MoveToAttack(destinationCreature.transform.position, dest.GetComponent<CharacterSheet>(), Actions.AttackType.melee);
+                        // Attack Creature
                     }
                 }
             }
@@ -485,10 +515,12 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             while (!DestinationReached())
             {
-               
+
                 yield return null;
             }
         }
+
+        CheckMovement();
     }
 
     public IEnumerator LookAtPosition(Transform target)
@@ -635,7 +667,11 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                                                        $"<color=red>{hasDamage}"));
 
             canAct = false;
+
+            character.NumberOfAttack++;
         }
+
+        CheckAttacks();
     }
 
     public IEnumerator ShowProjectilePath()
@@ -683,7 +719,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                 yield return null;
             }
 
-            HasAction(false);
             lineVisual.gameObject.SetActive(false);
             cursor.gameObject.SetActive(false);
         }
@@ -811,7 +846,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public bool AttackMelee()
     {
-        canMove = false;
+        canMove = true;
         canAttack = true;
         StartCoroutine(LookAtMouseDirection());
 
@@ -862,6 +897,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         canMove = false;
         hasMoved = 0;
         canAct = true;
+        character.RestartStats();
 
         if (isAI && AI != null)
         {

@@ -115,10 +115,10 @@ public static class Global
     // Menu and Stuff
     public static void ShowMatchMenu()
     {
-        UI.MatchMenu().transform.position = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0);
-        UI.MatchMenu().SetActive(!UI.MatchMenu().activeSelf);
+        UI.GetMatchMenu().transform.position = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0);
+        UI.GetMatchMenu().SetActive(!UI.GetMatchMenu().activeSelf);
 
-        if (UI.MatchMenu().activeSelf)
+        if (UI.GetMatchMenu().activeSelf)
             PauseGame();
         else
             ResumeGame();
@@ -177,6 +177,22 @@ public enum MovePanelType
     bottonTop = 3
 }
 
+public enum ItemType
+{
+    vegetal = 0,
+    mineral = 1,
+    food = 2,
+    tool = 3,
+    weapon = 4
+}
+
+public enum WeaponType
+{
+    Bludgeoning = 0,
+    Piercing = 1,
+    Slashing = 2
+}
+
 public static class MyParameters
 {
     public enum TurnState
@@ -203,14 +219,6 @@ public static class MyParameters
     {
         Chest = 0,
         Campfire = 1
-    }
-
-    public enum ItemType
-    {
-        vegetal = 0,
-        mineral = 1,
-        food = 2,
-        tool = 3
     }
 
     public enum ItemProperties

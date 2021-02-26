@@ -7,9 +7,9 @@ public class ItemBlueprint : ScriptableObject
 {
     [SerializeField] public string itemName;
     [SerializeField] public Sprite itemIcon;
-
+    [SerializeField] public ItemType itemType;
     [SerializeField] public string description;
-    public MyParameters.ItemType itemType;
+
     public List<MyParameters.ItemProperties> itemProperties;
 
     [SerializeField] public float weight;

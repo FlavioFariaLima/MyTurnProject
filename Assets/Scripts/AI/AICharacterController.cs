@@ -25,13 +25,24 @@ public class AICharacterController : MonoBehaviour
         return characterController;
     }
 
-    public void StartAITurn(PlayerCharacterController controller, CharacterSheet sheet)
+    public void StartAI(PlayerCharacterController controller, CharacterSheet sheet)
     {
-        this.characterController = controller;
-        this.characterSheet = sheet;
+        if (this.characterController == null)
+        {
+            this.characterController = controller;
+            this.characterSheet = sheet;
+            characterController.IsAi(true);
+        }
 
         Debug.Log($"{characterSheet.name} AI is Active!");
     }
+
+    // Start is called before the first frame update
+    void Awake()
+    {
+        //StartAI(GetComponent<PlayerCharacterController>(), GetComponent<CharacterSheet>());            
+    }
+
 
     public void UpdateMyknowledge()
     {

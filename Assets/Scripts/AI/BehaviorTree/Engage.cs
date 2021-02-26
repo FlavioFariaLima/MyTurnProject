@@ -34,10 +34,9 @@ namespace BehaviorDesigner.Runtime.Tasks.UltraMare
 
             if (characterAI != null)
             {
-                defaultController.AllowToMove(true);
-
+                //defaultController.AllowToMove(true);
+                //defaultController.IsAi(true);
                 var enemy = ClosestEnemyAlive();
-
                 StartCoroutine(defaultController.MoveToAttack(enemy.transform.position, enemy, Actions.AttackType.melee));
             }
         }

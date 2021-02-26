@@ -11,7 +11,7 @@ public class Inventory: MonoBehaviour
     [SerializeField] private float curWeight;
     [HideInInspector] private int size = 48;
 
-    [SerializeField] List<Item> inventoryItems = new List<Item>();
+    [SerializeField] List<UltraMare.Item> inventoryItems = new List<UltraMare.Item>();
 
     // Events
     public event Action OnAdd = () => { };
@@ -22,7 +22,7 @@ public class Inventory: MonoBehaviour
         return size;
     }
 
-    public List<Item> Items
+    public List<UltraMare.Item> Items
     {
         get
         {
@@ -34,7 +34,7 @@ public class Inventory: MonoBehaviour
         }
     }
 
-    public bool AddItem(Item _item)
+    public bool AddItem(UltraMare.Item _item)
     {
         if (Items.Count < size)
         {
@@ -100,7 +100,7 @@ public class Inventory: MonoBehaviour
         }
     }
 
-    public void ChangePosition(int index, int slotID, Item item)
+    public void ChangePosition(int index, int slotID, UltraMare.Item item)
     {
         if (index < inventoryItems.Count)
         {

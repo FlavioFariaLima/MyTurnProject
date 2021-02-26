@@ -114,11 +114,13 @@ public class MatchManager : MonoBehaviour
         inGameCharacters[turnOwnerId].controller.ResetActions();
         Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerId].controller);
         Global.UI.UpdatePortrait(inGameCharacters[turnOwnerId]);
-        Global.UI.DisableAllActions();
+        Global.UI.DisablActionsBtns();
 
         if (inGameCharacters[turnOwnerId].controller.IsAi() && inGameCharacters[turnOwnerId].controller.GetPlayerAI() == null)
         {
             StartCoroutine(inGameCharacters[turnOwnerId].controller.StartAI());
+
+            inGameCharacters[turnOwnerId].controller.IsAi(true);
         }
 
         if (!inGameCharacters[turnOwnerId].controller.IsAi())
@@ -224,6 +226,7 @@ public class MatchManager : MonoBehaviour
             CharacterSheet c = player.PlayerCharacters[position];
 
             GameObject charIcon = Instantiate(c.CharIcon, Global.UI.playerCharactersShotcut.transform);
+            charIcon.name = c.GetId().ToString();
             charIcon.GetComponent<Button>().onClick.AddListener(delegate { Global.UI.SelectCharacterForUI(c.GetId()); });
 
             c.shotcutIcon = charIcon.gameObject;
@@ -234,6 +237,15 @@ public class MatchManager : MonoBehaviour
     {
         character.CharIcon.transform.Find("HealthBar").GetComponent<Slider>().value = character.GetCurrrentHelth();
         character.CharIcon.transform.Find("Health").GetComponent<TextMeshProUGUI>().text = character.GetCurrrentHelth().ToString();
+
+        foreach (Transform child in Global.UI.playerCharactersShotcut.transform)
+        {
+            if (child.name == character.GetId().ToString())
+            {
+                child.Find("HealthBar").GetComponent<Slider>().value = character.GetCurrrentHelth();
+                child.Find("Health").GetComponent<TextMeshProUGUI>().text = character.GetCurrrentHelth().ToString();
+            }
+        }
     }
 
     public void UpdateIconStatus(CharacterSheet character, bool active)
@@ -245,6 +257,15 @@ public class MatchManager : MonoBehaviour
         else
         {
             character.CharIcon.transform.GetComponent<Image>().color = new Color(0, 0, 0, 1);
+        }
+
+
+        foreach (Transform child in Global.UI.playerCharactersShotcut.transform)
+        {
+            if (child.name == character.GetId().ToString())
+            {
+                child.GetComponent<Image>().color = character.CharIcon.transform.GetComponent<Image>().color;
+            }
         }
     }
 
@@ -372,18 +393,3 @@ public class MatchManager : MonoBehaviour
         Global.UI.EndMatch.SetActive(true);
     }
 }
-
-//[Serializable]
-//public class MatchPlayer
-//{
-//    public int id;
-//    public Player player;
-//    public List<CharacterSheet> characters;
-
-//    public MatchPlayer (Player player, List<CharacterSheet> playerChars)
-//    {
-//        this.id = player.GetId();
-//        this.player = player;
-//        this.characters = playerChars;
-//    }
-//}

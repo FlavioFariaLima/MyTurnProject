@@ -19,8 +19,8 @@ public class UIPanel : MonoBehaviour
 
             Global.GetGridColumnAndRow(grid, out column, out row);
 
-            this.GetComponent<RectTransform>().sizeDelta = new Vector2(586, 120 + (grid.cellSize.y * column));
-            grid.gameObject.GetComponent<RectTransform>().sizeDelta = this.GetComponent<RectTransform>().sizeDelta;
+            GetComponent<RectTransform>().sizeDelta = new Vector2(586, (grid.cellSize.y * column) - 100);
+            grid.gameObject.GetComponent<RectTransform>().sizeDelta = GetComponent<RectTransform>().sizeDelta;
             //grid.gameObject.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         }
     }

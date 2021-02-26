@@ -248,7 +248,7 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     /// <returns></returns>
     #region Process Station Items
 
-    private Item ProcessInventoryItems(MyParameters.ItemProperties propriety)
+    private UltraMare.Item ProcessInventoryItems(MyParameters.ItemProperties propriety)
     {
         for (int i = stationInventory.Items.Count - 1; i >= 0; i--)
         {
@@ -261,7 +261,7 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         return null;
     }
 
-    IEnumerator ProcessItem(Item item)
+    IEnumerator ProcessItem(UltraMare.Item item)
     {
         // Processing Item
         isProcessing = true;
@@ -316,7 +316,7 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         Debug.Log("Out of Fuel!");
     }
 
-    public Item FuelSourceManager()
+    public UltraMare.Item FuelSourceManager()
     {
         for (int i = stationInventory.Items.Count - 1; i >= 0; i--)
         {

@@ -150,11 +150,6 @@ public class InterfaceManager : MonoBehaviour
         }
     }
 
-    public GameObject MatchMenu()
-    {
-        return matchMenu;
-    }
-
     // Start is called before the first frame update
     void Start()
     {
@@ -396,7 +391,7 @@ public class InterfaceManager : MonoBehaviour
 
         List<ItemBlueprint> characterIngredients = new List<ItemBlueprint>();
 
-        foreach (Item it in CharacterInventory.Items)
+        foreach (UltraMare.Item it in CharacterInventory.Items)
         {
             characterIngredients.Add(it.itemBlueprint);
         }
@@ -430,7 +425,7 @@ public class InterfaceManager : MonoBehaviour
         }
     }
 
-    public void DropItem(Vector3 position, Item item, bool reverseDir)
+    public void DropItem(Vector3 position, UltraMare.Item item, bool reverseDir)
     {
         GameObject newItem = Instantiate(DropItemPrefab(), new Vector3(position.x, position.y + 1, position.z), Quaternion.identity);
         newItem.GetComponent<DropedItem>().SetItemBlueprint(item.itemBlueprint);
@@ -751,7 +746,6 @@ public class InterfaceManager : MonoBehaviour
     }
 
     // UI - Characters Actions
-
     public void SelectCharacterForUI(int id)
     {
         // Get Character Sheed
@@ -767,21 +761,27 @@ public class InterfaceManager : MonoBehaviour
         }
         else // Disable All Butons
         {
-            DisableAllActions();
+            DisablActionsBtns();
         }
     }
 
-    public void DisableAllActions()
+    public void DisablActionsBtns()
     {
         foreach (Transform child in characterActions.transform)
         {
             child.GetComponent<Button>().onClick.RemoveAllListeners();
             child.GetComponent<Button>().interactable = false;
-
-            // Pass Btn
-            passTurnBtn.GetComponent<Button>().onClick.RemoveAllListeners();
-            passTurnBtn.GetComponent<Button>().interactable = false;
         }
+
+        // Pass Btn
+        passTurnBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+        passTurnBtn.GetComponent<Button>().interactable = false;
+    }
+
+    public void DisableActionBtn(int index)
+    {
+        characterActions.transform.GetChild(index).GetComponent<Button>().onClick.RemoveAllListeners();
+        characterActions.transform.GetChild(index).GetComponent<Button>().interactable = false;
     }
 
     public void SetupActionsOwner(PlayerCharacterController character)
@@ -834,7 +834,12 @@ public class InterfaceManager : MonoBehaviour
     }
 
     // Menu
-    public void OpenMatchMenu()
+    public GameObject GetMatchMenu()
+    {
+        return matchMenu;
+    }
+
+    public void MatchMenu()
     {
         Global.ShowMatchMenu();
     }

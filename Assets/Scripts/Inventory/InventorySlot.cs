@@ -10,7 +10,7 @@ public class InventorySlot : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     private int slotID;
     [SerializeField] private MyParameters.SlotType slotType;
 
-    [SerializeField] Item item;
+    [SerializeField] UltraMare.Item item;
     [SerializeField] Text itemName;
     [SerializeField] Image itemIcon;
     [SerializeField] Text itemQnt;
@@ -35,7 +35,7 @@ public class InventorySlot : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
         OnEndDragEvent += FinishDrag;
     }
 
-    public Item Item()
+    public UltraMare.Item Item()
     {
         return item;
     }
@@ -52,7 +52,7 @@ public class InventorySlot : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
         itemQnt.gameObject.SetActive(false);
     }
 
-    public void HoldSlot(Item _item)
+    public void HoldSlot(UltraMare.Item _item)
     {
         item = _item;
         itemName.text = _item.itemName;

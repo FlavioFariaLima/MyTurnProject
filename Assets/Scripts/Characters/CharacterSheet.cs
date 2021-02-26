@@ -23,6 +23,19 @@ public class CharacterSheet: MonoBehaviour
     [SerializeField] private Character characterInfo;
 
     // Equipment
+    [SerializeField] private int totalAttacks = 1;
+    public int TotalAttacks
+    {
+        get { return totalAttacks; }
+        set { totalAttacks = value; }
+    }
+    [SerializeField] private int numberOfAttacks = 0;
+    public int NumberOfAttack
+    {
+        get { return numberOfAttacks; }
+        set { numberOfAttacks = value; }
+    }
+
     [SerializeField] private Weapon meleeWeapon;
     [SerializeField] private Weapon rangeWeapon;
 
@@ -48,6 +61,10 @@ public class CharacterSheet: MonoBehaviour
     public GameObject shotcutIcon;
 
     //
+    public void RestartStats()
+    {
+        numberOfAttacks = 0;
+    }
 
     private void Awake()
     {
@@ -55,6 +72,7 @@ public class CharacterSheet: MonoBehaviour
         playerId = GetComponentInParent<Player>().GetId();
 
         currentHealth = characterInfo.health;
+        RestartStats();
     }
 
     private void Update()
@@ -185,11 +203,11 @@ public class CharacterSheet: MonoBehaviour
         Debug.Log($"{GetName()} is dead!");
 
         // Deal with Match Icons
-        CharIcon.transform.GetComponent<Image>().color = new Color(1, 1, 1, 0.3f);
+        CharIcon.transform.GetComponent<Image>().color = new Color(1, 0, 0, 1);
 
         if(shotcutIcon)
         {
-            shotcutIcon.transform.GetComponent<Image>().color = new Color(1, 1, 1, 0.3f);
+            shotcutIcon.transform.GetComponent<Image>().color = new Color(1, 0, 0, 1);
         }
 
         // Check if Match is Over
