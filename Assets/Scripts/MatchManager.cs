@@ -113,7 +113,8 @@ public class MatchManager : MonoBehaviour
     {
         inGameCharacters[turnOwnerId].controller.ResetActions();
         Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerId].controller);
-        Global.UI.UpdatePortrait(inGameCharacters[turnOwnerId]);
+        Global.UI.UpdateCharacterIcon(inGameCharacters[turnOwnerId]);
+        Global.UI.UpdateMovementBar(inGameCharacters[turnOwnerId]);
         Global.UI.DisablActionsBtns();
 
         if (inGameCharacters[turnOwnerId].controller.IsAi() && inGameCharacters[turnOwnerId].controller.GetPlayerAI() == null)
@@ -125,13 +126,13 @@ public class MatchManager : MonoBehaviour
 
         if (!inGameCharacters[turnOwnerId].controller.IsAi())
         {
-            inGameCharacters[turnOwnerId].controller.SetSelectState(true);
         }
         else
         {
             inGameCharacters[turnOwnerId].controller.GetPlayerAI().CanEndTurn(true);
-            inGameCharacters[turnOwnerId].controller.SetSelectState(true);
         }
+
+        inGameCharacters[turnOwnerId].controller.SelectedForAct(true);
 
         if (inGameCharacters[turnOwnerId].GetPlayerId() == mainPlayer.GetId())
         {
@@ -227,9 +228,8 @@ public class MatchManager : MonoBehaviour
 
             GameObject charIcon = Instantiate(c.CharIcon, Global.UI.playerCharactersShotcut.transform);
             charIcon.name = c.GetId().ToString();
-            charIcon.GetComponent<Button>().onClick.AddListener(delegate { Global.UI.SelectCharacterForUI(c.GetId()); });
-
             c.shotcutIcon = charIcon.gameObject;
+            c.shotcutIcon.GetComponent<Button>().onClick.AddListener(delegate { c.controller.SelectedForUI(true);});
         }
     }
 
@@ -283,6 +283,7 @@ public class MatchManager : MonoBehaviour
     IEnumerator TurnStart()
     {
         SetupCharacterController();
+        inGameCharacters[turnOwnerId].controller.AllowToMove(true);
         Global.UI.SetCursor(Global.UI.cursorDefault, false);
 
         // Change UI Indicator
@@ -379,6 +380,7 @@ public class MatchManager : MonoBehaviour
 
         UpdateIconStatus(characterRound, false);
         characterRound.isMyTurn = false; // Its not this character turn anymore
+        characterRound.controller.AllowToMove(false);
         characterRound = inGameCharacters[turnOwnerId]; // Change to next character
 
         // Counting Rounds

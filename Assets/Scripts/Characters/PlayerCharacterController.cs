@@ -8,34 +8,33 @@ using UnityEngine.EventSystems;
 
 public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    // Character States
+    [Header("Character States")]
     private MyParameters.TurnState turn;
     public CharacterSheet character;
     private Inventory inventory;
     private CharacterHotbar hotbar;
-    private bool selectState;
     private GameObject selectedEffect;
 
-    // Movement and NavMesh
-    public float movementSofar;
+    [Header("Movement and NavMesh")]
     private bool checkDetination;
     private NavMeshAgent characterAgent;
     private Vector3 destination;
     private Animator animator;
+    private DropedItem destinationItem;
+    private CraftStation destinationStation;
+    private CharacterSheet destinationCreature;
+    private MyParameters.ObjectCategory destinationCategory;
+
+    public float movementSofar;
+    public Vector3 characterPosition;
+    public float arriveDistance = 1.5f;
+
     public Animator CharacterAnimator
     {
         get { return animator; }
     }
 
-    private DropedItem destinationItem;
-    private CraftStation destinationStation;
-    private CharacterSheet destinationCreature;
-    MyParameters.ObjectCategory destinationCategory;
-
-    public Vector3 characterPosition;
-    public float arriveDistance = 1.5f;
-
-    // AI
+    [Header("AI")]
     [SerializeField] private bool isAI;
     private AICharacterController AI = null;
 
@@ -51,15 +50,75 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     private bool canShoot = true;
     public GameObject eyes;
 
-    // Actions
+    [Header("Actions")]
+    [SerializeField] private bool selectState;
     private bool canAct;
     private bool canMove;
     private float hasMoved = 0;
     private bool canAttack;
 
-    // Mouse Interactions
-    private bool mouseIsOver;
+    [Header("Mouse Interactions")]
     [SerializeField] private TextMeshPro infoName;
+    private bool mouseIsOver;
+    private bool isSelectedForUI = false;
+
+    public Inventory Inventory()
+    {
+        return inventory;
+    }
+
+    public CharacterHotbar Hotbar()
+    {
+        return hotbar;
+    }
+
+    public bool IsSelectedForUI()
+    {
+        return isSelectedForUI;
+    }
+
+    public void SelectedForUI(bool value)
+    {
+        isSelectedForUI = value;
+        StartCoroutine(InfoUI());
+
+        if (isSelectedForUI)
+        {
+            Global.UI.SelectCharacterForUI(this.character.GetId());
+
+            foreach(CharacterSheet c in Global.Match.InGameCharacters())
+            {
+                if (c != character)
+                {
+                    c.controller.SelectedForUI(false);
+                }
+            }
+        }
+    }
+
+    public bool IsSelectedForAct
+    {
+        get { return selectState; }
+    }
+
+    public void SelectedForAct(bool selected)
+    {
+        selectState = selected;
+
+        if (selected)
+        {
+            Global.Commands.ClearSelectedCharacters(); // First we clear the list of selected characters
+            Global.Commands.AddSelectedCharacter(this); // Then we add this character to the list
+            Global.UI.selectedCharacterObject = this.gameObject;
+
+            selectedEffect.SetActive(true);
+            StartCoroutine(ShowReadyToActStuff());
+        }
+        else
+        {
+            selectedEffect.SetActive(false);
+        }
+    }
 
     public bool CanAct
     {
@@ -73,14 +132,15 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public bool CheckMovement()
     {
+        Global.UI.UpdateMovementBar(character);
+
         if (hasMoved < character.GetMovement())
         {
             return true;
         }
         else
         {
-            Global.UI.DisableActionBtn(0);
-            Global.UI.DisableActionBtn(3);
+            Global.UI.DisableActionBtn("Jump");
             return false;
         }
     }
@@ -94,13 +154,17 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     {
         if (character.NumberOfAttack < character.TotalAttacks)
         {
+            canMove = true;
+            canAttack = true;
+            canShoot = true;
             return true;
         }
         else
         {
-            canMove = false;
-            Global.UI.DisableActionBtn(1);
-            Global.UI.DisableActionBtn(2);
+            canAttack = false;
+            canShoot = false;
+            Global.UI.DisableActionBtn("Melee");
+            Global.UI.DisableActionBtn("Range");
             return false;
         }
     }
@@ -145,41 +209,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             canMove = false;
 
         AnimatorManager();
-
-        if (Global.Commands.playerIsAttacking)
-        {
-            if (Global.Commands.attackType == Actions.AttackType.range)
-            {
-            }
-        }
-    }
-
-    // Selected State
-    public bool GetSelectState()
-    {
-        return selectState;
-    }
-
-    public void SetSelectState(bool selected)
-    {
-        selectState = selected;
-
-        if (selected)
-        {
-            Global.Commands.ClearSelectedCharacters(); // First we clear the list of selected characters
-            Global.Commands.AddSelectedCharacter(this); // Then we add this character to the list
-
-            Global.UI.selectedCharacterObject = this.gameObject;
-            Global.UI.characterSheet = character;
-            Global.UI.CharacterInventory = inventory;
-            Global.UI.CharacterHotbar = hotbar;
-
-            selectedEffect.SetActive(true);
-        }
-        else
-        {
-            selectedEffect.SetActive(false);
-        }
     }
 
     // Animator and Animations
@@ -261,35 +290,63 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         return remainingDistance <= arriveDistance;
     }
 
-    // UI
+    /// <summary>
+    /// UI
+    /// </summary>
+    /// <returns></returns>
+
     private IEnumerator InfoUI()
     {
-        while (mouseIsOver)
+        while (mouseIsOver || IsSelectedForUI())
         {
             infoName.gameObject.SetActive(true);
+            FaceTextMeshToCamera(infoName.transform);
+            transform.GetComponentInChildren<Renderer>().material.EnableKeyword("_EMISSION");
+
+            yield return null;
+        }
+
+        infoName.gameObject.SetActive(false);
+        transform.GetComponentInChildren<Renderer>().material.DisableKeyword("_EMISSION");
+    }
+
+    public IEnumerator ShowReadyToActStuff()
+    {
+        while (IsSelectedForAct)
+        {
+            infoName.gameObject.SetActive(true);
+            infoName.color = Global.UI.actColor;
             FaceTextMeshToCamera(infoName.transform);
 
             yield return null;
         }
 
         infoName.gameObject.SetActive(false);
+        infoName.color = Global.UI.defaultColor;
+
     }
 
-    private IEnumerator PopFloatText(Transform parent, string atkText, string dmgText)
+    private IEnumerator PopFloatText(Transform parent, string popText, int colorSet)
     {
-        string popText = $"{atkText}";
-
-        if (dmgText != string.Empty)
-        {
-            popText += $"({dmgText})";
-        }
+        if (popText == string.Empty)
+            popText = "Miss!";
 
         float timeOfTravel = 1f; //time to object reach a target place 
         float currentTime = 0; // actual floting time 
         float normalizedValue;
+        Color color_i = new Color();
+        Color color_f = new Color();
 
-        Color color_i = new Color(0.5f, 0, 0, 1);
-        Color color_f = new Color(1, 1, 1, 1);
+        if (colorSet == 0)
+        {
+            color_i = Global.UI.dmgColor;
+            color_f = Global.UI.dmgColor;
+        }
+        else if (colorSet == 1)
+        {
+            color_i = Global.UI.defaultColor;
+            color_f = Global.UI.defaultColor;
+        }
 
         Vector3 initialOffset = new Vector3(parent.position.x, 1, parent.position.z);
         Vector3 finalOffset = new Vector3(parent.position.x, 2.5f, parent.position.z);
@@ -324,27 +381,22 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         obj.eulerAngles = origRot;
     }
 
-    // Mouse Methods
+    /// <summary>
+    ///  Mouse Methods
+    /// </summary>
     private void OnMouseUp()
     {
-        //if (isAI)
-        //{
-        //    selectedEnemy = this.character;
-        //    StartCoroutine(Global.UI.LerpMoveObject(Global.UI.enemyInfo, this.character, MovePanelType.leftRight, true));
-
-        //}
-
         if (!Global.Commands.playerIsAttacking && Global.Commands.GetSelectedCharacters()[0] != this)
         {
             if (Global.Match.playerTurn == Global.Match.MatchPlayers[this.character.GetPlayerId()]
                 && Global.Match.MatchPlayers[this.character.GetPlayerId()].GetName != "DM")
             {
-                SetSelectState(true);
+                //SetSelectState(true);
             }
 
             // Show Character Information
             Global.UI.ShowCharacterInfo(character);
-            Global.UI.SelectCharacterForUI(this.character.GetId());
+            SelectedForUI(true);
         }
         else
         {
@@ -356,7 +408,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             }
             else
             {
-                Global.UI.SelectCharacterForUI(this.character.GetId());
+                SelectedForUI(true);
             }
 
             Global.UI.characterSheet.controller.canAttack = false;
@@ -367,7 +419,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     {
         mouseIsOver = true;
         StartCoroutine(InfoUI());
-        transform.GetComponentInChildren<Renderer>().material.EnableKeyword("_EMISSION");
 
         if (Global.Commands.playerIsAttacking && !isAI && !selectState)
         {
@@ -389,7 +440,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     { 
         mouseIsOver = false;
         StartCoroutine(InfoUI());
-        transform.GetComponentInChildren<Renderer>().material.DisableKeyword("_EMISSION");
 
         if (Global.Commands.playerIsAttacking)
         {
@@ -545,7 +595,13 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
-    // Combat
+    /// <summary>
+    /// Combat
+    /// </summary>
+    /// <param name="dest"></param>
+    /// <param name="enemy"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
     public IEnumerator MoveToAttack(Vector3 dest, CharacterSheet enemy, Actions.AttackType type)
     {
         if (true)
@@ -584,7 +640,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             }
 
             AllowToMove(false);
-            canMove = false;
         }
     }
 
@@ -639,14 +694,14 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                 hasDamage = $"Damage Roll: 1d{dmgResult[2]} ({dmgResult[0]} {bonusSymbolDmg} {dmgResult[3]}) = {dmgResult[1]}";
 
                 // Float Text
-                StartCoroutine(PopFloatText(enemy.transform, $"{attackResult[1]}", $"{dmgResult[1]}"));
+                StartCoroutine(PopFloatText(enemy.transform, $"{dmgResult[1]}", 0));
 
                 //Debug.Log($"Pass AC!");
             }
             else
             {
                 // Float Text
-                StartCoroutine(PopFloatText(enemy.transform, $"{attackResult[1]}", string.Empty));
+                StartCoroutine(PopFloatText(enemy.transform, string.Empty, 1));
             }
 
             // Enemy Now Know Your Position
@@ -665,8 +720,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             StartCoroutine(Global.UI.AddPlayerLogInput($"<color=green>{character.GetName()} <color=#ffffff>{attackConclusion} <color=red>{enemy.GetName()}(<color=#ffffff>AC {enemy.GetArmour()})",
                                                        $"<color=lightblue>Attack Roll: 1d20({attackResult[0]} {bonusSymbolAttack} {attackResult[3]}) = {attackResult[1]}",
                                                        $"<color=red>{hasDamage}"));
-
-            canAct = false;
 
             character.NumberOfAttack++;
         }
@@ -802,6 +855,99 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
+    /// <summary>
+    /// Path Line and Path Calculations
+    /// </summary>
+    private IEnumerator ShowMovementPath()
+    {
+        while (CanAct && CanMove)
+        {
+            RaycastHit hit;
+
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))
+            {
+                Global.UI.distanceInfo.gameObject.SetActive(true);
+                Global.UI.pathLine.enabled = true;
+
+                if (Global.Commands.GetSelectedCharacters()[0].HasMoved >= Global.Commands.GetSelectedCharacters()[0].character.GetMovement())
+                {
+                    yield return null;
+                }
+                else if (Global.Commands.GetSelectedCharacters()[0].IsAi())
+                {
+                    yield return null;
+                }
+
+                Global.UI.pathLine.startWidth = 0.05f;
+                Global.UI.pathLine.endWidth = 0.05f;
+                Global.UI.pathLine.colorGradient = Global.UI.gradient;
+
+                Global.Commands.GetSelectedCharacters()[0].movementSofar = Global.Commands.GetSelectedCharacters()[0].HasMoved;
+                NavMeshPath path = new NavMeshPath();
+                NavMesh.CalculatePath(Global.Commands.GetMainSelectedCharacterTransform().position, hit.point, NavMesh.AllAreas, path);
+                float distance = 0;
+                float soFar = Global.UI.characterSheet.controller.HasMoved;
+                Vector3 finalPoint = new Vector3();
+
+                for (int i = 0; i < path.corners.Length - 1; i++) // Leave room to add 1
+                {
+                    float segmentDistance = (path.corners[i + 1] - path.corners[i]).magnitude;
+
+                    if (Global.Commands.GetSelectedCharacters()[0].movementSofar + segmentDistance <= Global.Commands.GetSelectedCharacters()[0].character.GetMovement())
+                    {
+                        Global.Commands.GetSelectedCharacters()[0].movementSofar += segmentDistance;
+                    }
+                    else // Path length exceeds maxDist
+                    {
+                        finalPoint = path.corners[i] + ((path.corners[i + 1] - path.corners[i]).normalized * (Global.Commands.GetSelectedCharacters()[0].character.GetMovement() - Global.Commands.GetSelectedCharacters()[0].movementSofar));
+                        distance = Vector3.Distance(Global.Commands.GetSelectedCharacters()[0].transform.position, finalPoint);
+                        NavMesh.CalculatePath(Global.Commands.GetSelectedCharacters()[0].transform.position, finalPoint, NavMesh.AllAreas, path);
+                        break;
+                    }
+                }
+
+                if (path.corners.Length > 0)
+                {
+                    distance = Vector3.Distance(Global.Commands.GetSelectedCharacters()[0].transform.position, path.corners[path.corners.Length - 1]);
+
+                    Global.UI.pathLine.positionCount = path.corners.Length;
+
+                    for (int i = 0; i < path.corners.Length; i++)
+                    {
+                        Global.UI.pathLine.SetPosition(i, path.corners[i]);
+
+                        float dist = Vector3.Distance(Global.UI.pathLine.GetPosition(0), Global.UI.pathLine.GetPosition(i));
+                        if (dist > 9)
+                        {
+                            Global.UI.pathLine.SetPosition(i, Vector3.MoveTowards(Global.UI.pathLine.GetPosition(0), Global.UI.pathLine.GetPosition(i),
+                                            Global.Commands.GetMainSelectedCharacterTransform().GetComponent<CharacterSheet>().GetMovement()));
+
+                            yield return null;
+                        }
+                    }
+
+                    if (Math.Round(distance, 2) > 0 && !Global.Commands.GetSelectedCharacters()[0].IsAi())
+                        Global.UI.distanceInfo.text = Math.Round(distance, 1).ToString();
+
+                    if (Global.UI.pathLine.positionCount > 0 && !Global.Commands.GetSelectedCharacters()[0].IsAi())
+                        Global.UI.distanceInfo.rectTransform.position = Camera.main.WorldToScreenPoint(Global.UI.pathLine.GetPosition(Global.UI.pathLine.positionCount - 1));
+
+                }
+                else
+                {
+                    Global.UI.distanceInfo.text = string.Empty;
+                }
+            }
+
+            yield return null;
+        }
+
+        if (!Global.Commands.playerIsAttacking)
+            Global.UI.distanceInfo.gameObject.SetActive(false);
+
+        Global.UI.pathLine.enabled = false;
+    }
+
     public void RotateCharacter()
     {
         Ray cameraRay = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -817,7 +963,10 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         }
     }
 
-    // Actions Menu
+    /// <summary>
+    /// Actions Menu
+    /// </summary>
+    /// <param name="has"></param>
     public void HasAction(bool has)
     {
         if (has)
@@ -839,19 +988,18 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         if (allow && !isAI)
         {
             Global.UI.SetCursor(Global.UI.cursorMove, false);
+            StartCoroutine(ShowMovementPath());
         }
 
         return true;
     }
 
     public bool AttackMelee()
-    {
-        canMove = true;
-        canAttack = true;
-        StartCoroutine(LookAtMouseDirection());
+    {        
 
-        if (canAct)
+        if (canAct && CheckAttacks())
         {
+            StartCoroutine(LookAtMouseDirection());
             Global.Commands.playerIsAttacking = true;
             Global.Commands.attackType = Actions.AttackType.melee;
 
@@ -866,14 +1014,13 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public bool AttackRange()
     {
-        if (canAct)
+        if (canAct && CheckAttacks())
         {
-            canMove = false;
-            canShoot = true;
+            CheckAttacks();
 
+            StartCoroutine(ShowProjectilePath());
             Global.Commands.playerIsAttacking = true;
             Global.Commands.attackType = Actions.AttackType.range;
-            StartCoroutine(ShowProjectilePath());
 
             cursor.gameObject.SetActive(true);
             lineVisual.gameObject.SetActive(true);

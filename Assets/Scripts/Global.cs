@@ -14,6 +14,7 @@ public static class Global
 
     private static GameObject dragItemImg = new GameObject();
 
+
     // Start and set prioritary parameters.
     public static void Setup()
     {

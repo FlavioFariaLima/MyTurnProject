@@ -24,7 +24,7 @@ public class PlayerCommands : MonoBehaviour
     {
         foreach (PlayerCharacterController character in selectedCharacters)
         {
-            character.SetSelectState(false);
+            character.SelectedForAct(false);
         }
 
         selectedCharacters.Clear();

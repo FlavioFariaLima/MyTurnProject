@@ -84,6 +84,7 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] private GameObject dropedItemPrefab;
     [SerializeField] private GameObject characterInfo;
     [SerializeField] public TextMeshProUGUI distanceInfo;
+    [SerializeField] private GameObject barMovement;
     public GameObject DropItemPrefab()
     {
         return dropedItemPrefab;
@@ -121,9 +122,18 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] public Texture2D cursorMelee;
     [SerializeField] public Texture2D cursorRange;
 
+
+    [Header("Colors")]
+    [SerializeField] public Color defaultColor = new Color(1, 1, 1, 1);
+    [SerializeField] public Color actColor = new Color(0, 0.8f, 0.2f, 1);
+    [SerializeField] public Color dmgColor = new Color(0.8f, 0.2f, 0.2f, 1);
+
     [Header("Misc")]
     // Float Stats
     [SerializeField] public GameObject popupTextPrefab;
+    [SerializeField] public LineRenderer pathLine;
+    public float alpha = 1.0f;
+    public Gradient gradient = new Gradient();
 
     private Texture2D lastCursor;
     public Texture2D LastCursor
@@ -148,6 +158,21 @@ public class InterfaceManager : MonoBehaviour
         {
             Cursor.SetCursor(c, hotSpot, cursorMode);
         }
+    }
+
+    private void Awake()
+    {
+        //pathLine.startWidth = 0.1f;
+        //pathLine.endWidth = 0.1f;
+
+        //alpha = 1.0f;
+        //gradient = new Gradient();
+        //gradient.SetKeys(
+        //        new GradientColorKey[] { new GradientColorKey(Color.green, 0.0f),
+        //        new GradientColorKey(Color.red, 1.0f) },
+        //        new GradientAlphaKey[] { new GradientAlphaKey(Global.UI.alpha, 0.0f),
+        //        new GradientAlphaKey(Global.UI.alpha, 1.0f) }
+        //        );
     }
 
     // Start is called before the first frame update
@@ -436,7 +461,46 @@ public class InterfaceManager : MonoBehaviour
             newItem.GetComponent<Rigidbody>().velocity = transform.TransformDirection(Vector3.back * 2);
     }
 
-    // Informations UI
+    /// <summary>
+    /// Informations UI
+    /// </summary>
+    /// 
+
+    public void SelectCharacterForUI(int id)
+    {
+        // Get Character Sheed
+        characterSelectedToUI = Global.Match.InGameCharacters().Find(x => x.GetId() == id);
+
+        // Sent to UI
+        UpdateCharacterIcon(characterSelectedToUI);
+
+        // Active if is Turn Owner
+        if (characterSelectedToUI == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId])
+        {
+            SetupActionsOwner(Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].controller);
+        }
+        else // Disable All Butons
+        {
+            DisablActionsBtns();
+        }
+
+        foreach (Transform child in Global.UI.playerCharactersShotcut.transform)
+        {
+            if (child.name == characterSelectedToUI.GetId().ToString())
+            {
+                child.Find("Border").gameObject.SetActive(true);
+
+                // Send Character Information to Panels
+                Global.UI.characterSheet = characterSelectedToUI;
+                Global.UI.CharacterInventory = characterSelectedToUI.controller.Inventory();
+                Global.UI.CharacterHotbar = characterSelectedToUI.controller.Hotbar();
+
+            }
+            else
+                child.Find("Border").gameObject.SetActive(false);
+        }
+    }
+
     public void ShowItemInfo()
     {
         if (mouseOverSlot != null && mouseOverSlot.Item() != null) // Inventory Objects
@@ -723,7 +787,22 @@ public class InterfaceManager : MonoBehaviour
         //characterInfo.SetActive(true);
     }
 
-    // UI - Buttons On Click
+    public void UpdateCharacterIcon(CharacterSheet character)
+    {
+        portrait.transform.Find("CharHp").GetComponent<TextMeshProUGUI>().text = $"{character.GetCurrrentHelth()} / {character.GetHealth()}";
+        portrait.transform.Find("PortraitSprite").GetComponent<UnityEngine.UI.Image>().sprite = character.CharPortrait;
+    }
+
+    public void UpdateMovementBar(CharacterSheet character)
+    {
+        barMovement.transform.GetComponentInChildren<TextMeshProUGUI>().text = $"{(int)character.GetMovement() - (int)character.controller.movementSofar} / {(int)character.GetMovement()}";
+        barMovement.transform.GetComponentInChildren<Slider>().maxValue = character.GetMovement();
+        barMovement.transform.GetComponentInChildren<Slider>().value = (int)character.GetMovement() - (int)character.controller.movementSofar;
+    }
+
+    /// <summary>
+    ///  UI - Character Panels
+    /// </summary>
     public void ShowHideInventory()
     {
         Global.ShowCharacterInventory();
@@ -739,30 +818,22 @@ public class InterfaceManager : MonoBehaviour
         Global.ShowExaminePanel();
     }
 
-    // UI - Turn and Time
+    /// <summary>
+    ///  UI - Turn and Time
+    /// </summary>
+    /// <param name="counterValue"></param>
     public void UpdateTurnClock(float counterValue)
     {
         TurnPanel.transform.Find("Timer").GetComponent<TextMeshProUGUI>().text = counterValue.ToString();
     }
 
-    // UI - Characters Actions
-    public void SelectCharacterForUI(int id)
+    /// <summary>
+    ///  UI - Characters Actions Buttons
+    /// </summary>
+    /// <param name="id"></param>
+    public void EnableActionButton(int index, bool enable)
     {
-        // Get Character Sheed
-        characterSelectedToUI = Global.Match.InGameCharacters().Find(x => x.GetId() == id);
-
-        // Sent to UI
-        UpdatePortrait(characterSelectedToUI);
-
-        // Active if is Turn Owner
-        if (characterSelectedToUI == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId])
-        {
-            SetupActionsOwner(Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].controller);
-        }
-        else // Disable All Butons
-        {
-            DisablActionsBtns();
-        }
+        characterActions.transform.GetChild(index).GetComponent<Button>().interactable = enable;
     }
 
     public void DisablActionsBtns()
@@ -778,10 +849,10 @@ public class InterfaceManager : MonoBehaviour
         passTurnBtn.GetComponent<Button>().interactable = false;
     }
 
-    public void DisableActionBtn(int index)
+    public void DisableActionBtn(string name)
     {
-        characterActions.transform.GetChild(index).GetComponent<Button>().onClick.RemoveAllListeners();
-        characterActions.transform.GetChild(index).GetComponent<Button>().interactable = false;
+        characterActions.transform.Find(name).GetComponent<Button>().onClick.RemoveAllListeners();
+        characterActions.transform.Find(name).GetComponent<Button>().interactable = false;
     }
 
     public void SetupActionsOwner(PlayerCharacterController character)
@@ -792,17 +863,20 @@ public class InterfaceManager : MonoBehaviour
             foreach (Transform child in characterActions.transform)
             {
                 child.GetComponent<Button>().onClick.RemoveAllListeners();
-                child.GetComponent<Button>().interactable = true;
+                child.GetComponent<Button>().interactable = false;
             }
 
             passTurnBtn.GetComponent<Button>().onClick.RemoveAllListeners();
             passTurnBtn.GetComponent<Button>().interactable = true;
 
+            if (character.CheckAttacks())
+            {
+                characterActions.transform.Find("Melee").GetComponent<Button>().onClick.AddListener(delegate { character.AttackMelee(); });
+                characterActions.transform.Find("Melee").GetComponent<Button>().interactable = true;
 
-            // Set Action Buttons
-            characterActions.transform.GetChild(0).GetComponent<Button>().onClick.AddListener(delegate { character.AllowToMove(true); });
-            characterActions.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(delegate { character.AttackMelee(); });
-            characterActions.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(delegate { character.AttackRange(); });
+                characterActions.transform.Find("Range").GetComponent<Button>().onClick.AddListener(delegate { character.AttackRange(); });
+                characterActions.transform.Find("Range").GetComponent<Button>().interactable = true;
+            }
 
             // Set Pass Turn Button
             passTurnBtn.GetComponent<Button>().onClick.AddListener(delegate { Global.Match.PassTurn(); });
@@ -821,18 +895,10 @@ public class InterfaceManager : MonoBehaviour
         }
     }
 
-    public void EnableActionButton(int index, bool enable)
-    {
-        characterActions.transform.GetChild(index).GetComponent<Button>().interactable = enable;
-    }
-
-    //
-    public void UpdatePortrait(CharacterSheet character)
-    {
-        portrait.transform.Find("CharHp").GetComponent<TextMeshProUGUI>().text = $"{character.GetCurrrentHelth()} / {character.GetHealth()}";
-        portrait.transform.Find("PortraitSprite").GetComponent<UnityEngine.UI.Image>().sprite = character.CharPortrait;
-    }
-
+    /// <summary>
+    /// Menus & Move Panels
+    /// </summary>
+    /// <returns></returns>
     // Menu
     public GameObject GetMatchMenu()
     {
@@ -844,7 +910,6 @@ public class InterfaceManager : MonoBehaviour
         Global.ShowMatchMenu();
     }
 
-    // Move Panels
     public float ScaleFactor()
     {
         return Global.CanvasManager.gameObject.GetComponent<Canvas>().scaleFactor;
