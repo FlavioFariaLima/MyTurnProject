@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Fiber
   m_EditorClassIdentifier: 
   itemName: Fiber
-  itemIcon: {fileID: 21300000, guid: cc08ccd1cf04a3d43b8d437d087cfc02, type: 3}
-  description: Some vegetal fiber...
+  itemIcon: {fileID: 21300000, guid: 707545fb132aed646bdaf12831b9aaf5, type: 3}
   itemType: 0
+  description: Some vegetal fiber...
   itemProperties: 
   weight: 0.1
   canStock: 1

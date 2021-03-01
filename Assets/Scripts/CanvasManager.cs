@@ -38,3 +38,11 @@ public class CanvasManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         Debug.Log("Cursor Exiting " + name + " GameObject");
     }
 }
+
+public enum PanelPosition
+{
+    left = 0,
+    right = 1,
+    top = 2,
+    bottom = 3
+}

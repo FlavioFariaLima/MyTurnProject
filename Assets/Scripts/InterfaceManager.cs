@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -16,16 +17,16 @@ public class InterfaceManager : MonoBehaviour
     [Header("Characters")]
     public GameObject selectedCharacterObject;
     public CharacterSheet characterSheet;
-    private Inventory _playerInventory;
+    private Inventory characterInventory;
     public Inventory CharacterInventory
     {
         get
         {
-            return _playerInventory;
+            return characterInventory;
         }
         set
         {
-            _playerInventory = value;
+            characterInventory = value;
         }
     }
     [SerializeField] private CharacterHotbar characterHotbar;
@@ -43,6 +44,7 @@ public class InterfaceManager : MonoBehaviour
     public Vector3 selectedCharacterPosition;
 
     [Header("Characters Panel")]
+    [SerializeField] private GameObject characterInfo;
     public GameObject panel_PlayerInventory;
     public GameObject slotsParent_PlayerInventory;
     public GameObject characterCraftPanel;
@@ -51,6 +53,9 @@ public class InterfaceManager : MonoBehaviour
     public InventorySlot[] _playerSlots;
     [SerializeField] private GameObject characterActions;
     [SerializeField] public RectTransform enemyInfo;
+    [SerializeField] private GameObject portrait;
+    [SerializeField] private GameObject barHealth;
+    [SerializeField] private GameObject barMovement;
 
     [Header("Characters Hotbar")]
     public GameObject panel_playerHotbar;
@@ -82,9 +87,7 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] private RectTransform itemInfoPanel;
     [SerializeField] private RectTransform recipeInfoPanel;
     [SerializeField] private GameObject dropedItemPrefab;
-    [SerializeField] private GameObject characterInfo;
     [SerializeField] public TextMeshProUGUI distanceInfo;
-    [SerializeField] private GameObject barMovement;
     public GameObject DropItemPrefab()
     {
         return dropedItemPrefab;
@@ -98,18 +101,13 @@ public class InterfaceManager : MonoBehaviour
     [HideInInspector] public GameObject mouseOverObject = null;
     [HideInInspector] public CraftSlot mouseOverCraftSlot = null;
 
-    private Color color1 = new Color(0.5f, 1f, .4f, 1f);
-    private Color color2 = new Color(0.0f, .9f, .95f, 1f);
-
     [Header("Match Manager")]
     [SerializeField] public GameObject TurnPanel;
     [SerializeField] public GameObject CharacterSheetIcons;
     [SerializeField] public GameObject CharacterIconsPrefab;
     [SerializeField] public GameObject EndMatch;
     [SerializeField] private GameObject passTurnBtn;
-    [SerializeField] private GameObject portrait;
-
-    private CharacterSheet characterSelectedToUI;
+    [HideInInspector] public CharacterSheet characterSelectedToUI;
 
     [Header("Menu and Stuff")]
     [SerializeField] private GameObject matchMenu;
@@ -122,11 +120,12 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] public Texture2D cursorMelee;
     [SerializeField] public Texture2D cursorRange;
 
-
     [Header("Colors")]
     [SerializeField] public Color defaultColor = new Color(1, 1, 1, 1);
     [SerializeField] public Color actColor = new Color(0, 0.8f, 0.2f, 1);
     [SerializeField] public Color dmgColor = new Color(0.8f, 0.2f, 0.2f, 1);
+    [SerializeField] private Color color1 = new Color(0.5f, 1f, .4f, 1f);
+    [SerializeField] private Color color2 = new Color(0.0f, .9f, .95f, 1f);
 
     [Header("Misc")]
     // Float Stats
@@ -134,7 +133,8 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] public LineRenderer pathLine;
     public float alpha = 1.0f;
     public Gradient gradient = new Gradient();
-
+    [SerializeField] private GameObject destinationEffect;
+    [SerializeField] private LineRenderer destinationPath;
     private Texture2D lastCursor;
     public Texture2D LastCursor
     {
@@ -158,21 +158,6 @@ public class InterfaceManager : MonoBehaviour
         {
             Cursor.SetCursor(c, hotSpot, cursorMode);
         }
-    }
-
-    private void Awake()
-    {
-        //pathLine.startWidth = 0.1f;
-        //pathLine.endWidth = 0.1f;
-
-        //alpha = 1.0f;
-        //gradient = new Gradient();
-        //gradient.SetKeys(
-        //        new GradientColorKey[] { new GradientColorKey(Color.green, 0.0f),
-        //        new GradientColorKey(Color.red, 1.0f) },
-        //        new GradientAlphaKey[] { new GradientAlphaKey(Global.UI.alpha, 0.0f),
-        //        new GradientAlphaKey(Global.UI.alpha, 1.0f) }
-        //        );
     }
 
     // Start is called before the first frame update
@@ -200,7 +185,7 @@ public class InterfaceManager : MonoBehaviour
         ExaminePanel.SetActive(false);
         characterInfo.SetActive(false);
 
-        _playerInventory = selectedCharacterObject.GetComponent<Inventory>();
+        characterInventory = selectedCharacterObject.GetComponent<Inventory>();
         _playerSlots = slotsParent_PlayerInventory.GetComponentsInChildren<InventorySlot>();
         _hotbarSlots = slotsParent_playerHotbar.GetComponentsInChildren<InventorySlot>();
 
@@ -486,7 +471,18 @@ public class InterfaceManager : MonoBehaviour
 
         foreach (Transform child in Global.UI.playerCharactersShotcut.transform)
         {
-            if (child.name == characterSelectedToUI.GetId().ToString())
+            if (child.name == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].GetId().ToString())
+            {
+                child.Find("Border").gameObject.SetActive(true);
+
+            }
+            else
+                child.Find("Border").gameObject.SetActive(false);
+        }
+
+        foreach (Transform child in Global.UI.CharacterSheetIcons.transform)
+        {
+            if (child.name == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId].GetId().ToString())
             {
                 child.Find("Border").gameObject.SetActive(true);
 
@@ -708,15 +704,54 @@ public class InterfaceManager : MonoBehaviour
         }
     }
 
-    public void ShowCharacterInfo(CharacterSheet character)
+    public void UpdateCharacterIcon(CharacterSheet character)
     {
-        //Debug.Log("Mostrar Character Information...");
+        portrait.transform.Find("PortraitSprite").GetComponent<UnityEngine.UI.Image>().sprite = character.Portrait();
+        UpdateCharacterInfoPanel(character);
 
+        // Add Character Inventory to UI Panel
+        CharacterInventory = character.controller.Inventory();
+        CharacterHotbar = character.controller.Hotbar();
+        UpdateCharacterInventory();
+
+        UpdateHealthBar(character);
+        UpdateMovementBar(character);
+        Global.Match.UpdateCharactersIcons();
+    }
+
+    public void UpdateCurrentCharacterInfo()
+    {
+        if (characterSelectedToUI)
+        {
+            portrait.transform.Find("PortraitSprite").GetComponent<UnityEngine.UI.Image>().sprite = characterSelectedToUI.Portrait();
+            UpdateCharacterInfoPanel(characterSelectedToUI);
+
+            // Add Character Inventory to UI Panel
+            CharacterInventory = characterSelectedToUI.controller.Inventory();
+            CharacterHotbar = characterSelectedToUI.controller.Hotbar();
+            UpdateCharacterInventory();
+
+            UpdateHealthBar(characterSelectedToUI);
+            UpdateMovementBar(characterSelectedToUI);
+            Global.Match.UpdateCharactersIcons();
+        }
+    }
+
+    public void UpdateCharacterInfoPanel(CharacterSheet character)
+    {
         foreach (Transform child in characterInfo.transform)
         {
             if (child.name == "name")
             {
                 child.GetComponent<TextMeshProUGUI>().text = $"{character.GetName()}";
+            }
+            else if (child.name == "classe")
+            {
+                child.GetComponent<TextMeshProUGUI>().text = $"{character.GetClass()}";
+            }
+            else if (child.name == "race")
+            {
+                child.GetComponent<TextMeshProUGUI>().text = $"{character.GetRace()}";
             }
             else if (child.name == "health")
             {
@@ -787,22 +822,31 @@ public class InterfaceManager : MonoBehaviour
         //characterInfo.SetActive(true);
     }
 
-    public void UpdateCharacterIcon(CharacterSheet character)
+    public void UpdateHealthBar(CharacterSheet character)
     {
-        portrait.transform.Find("CharHp").GetComponent<TextMeshProUGUI>().text = $"{character.GetCurrrentHelth()} / {character.GetHealth()}";
-        portrait.transform.Find("PortraitSprite").GetComponent<UnityEngine.UI.Image>().sprite = character.CharPortrait;
+        barHealth.transform.GetComponentInChildren<TextMeshProUGUI>().text = $"{(int)character.GetCurrrentHelth()} / {(int)character.GetHealth()}";
+        barHealth.transform.GetComponentInChildren<Slider>().maxValue = character.GetHealth();
+        barHealth.transform.GetComponentInChildren<Slider>().value = (int)character.GetCurrrentHelth();
+
+        Global.Match.UpdateIconHealthBar(character);
     }
 
     public void UpdateMovementBar(CharacterSheet character)
     {
-        barMovement.transform.GetComponentInChildren<TextMeshProUGUI>().text = $"{(int)character.GetMovement() - (int)character.controller.movementSofar} / {(int)character.GetMovement()}";
+        barMovement.transform.GetComponentInChildren<TextMeshProUGUI>().text = $"{(int)character.GetMovement() - (int)character.controller.HasMoved} / {(int)character.GetMovement()}";
         barMovement.transform.GetComponentInChildren<Slider>().maxValue = character.GetMovement();
-        barMovement.transform.GetComponentInChildren<Slider>().value = (int)character.GetMovement() - (int)character.controller.movementSofar;
+        barMovement.transform.GetComponentInChildren<Slider>().value = (int)character.GetMovement() - (int)character.controller.HasMoved;
     }
 
     /// <summary>
     ///  UI - Character Panels
     /// </summary>
+    /// 
+    public void ShowHideCharacterInfo()
+    {
+        characterInfo.SetActive(!characterInfo.activeSelf);
+    }
+
     public void ShowHideInventory()
     {
         Global.ShowCharacterInventory();
@@ -900,6 +944,31 @@ public class InterfaceManager : MonoBehaviour
     /// </summary>
     /// <returns></returns>
     // Menu
+    public IEnumerator ShowDestinationPoint()
+    {
+        destinationPath.startWidth = 0.02f;
+        destinationPath.endWidth = 0.02f;
+        destinationPath.colorGradient = Global.UI.gradient;
+
+        while (Global.Commands.GetMainSelectedCharacterTransform().GetComponent<PlayerCharacterController>().CharacterAgent.hasPath)
+        {
+            destinationEffect.SetActive(true);
+            destinationEffect.transform.position = Global.Commands.GetMainSelectedCharacterTransform().GetComponent<PlayerCharacterController>().CharacterAgent.destination;
+
+            NavMeshPath path = new NavMeshPath();
+            NavMesh.CalculatePath(Global.Commands.GetMainSelectedCharacterTransform().position, // Saves the path in the path variable.
+                Global.Commands.GetMainSelectedCharacterTransform().GetComponent<PlayerCharacterController>().CharacterAgent.destination, NavMesh.AllAreas, path); 
+            Vector3[] corners = path.corners;
+            destinationPath.SetPositions(corners);
+
+            destinationPath.gameObject.SetActive(true);
+            yield return null;
+        }
+
+        destinationEffect.SetActive(false);
+        destinationPath.gameObject.SetActive(false);
+    }
+
     public GameObject GetMatchMenu()
     {
         return matchMenu;
@@ -908,216 +977,5 @@ public class InterfaceManager : MonoBehaviour
     public void MatchMenu()
     {
         Global.ShowMatchMenu();
-    }
-
-    public float ScaleFactor()
-    {
-        return Global.CanvasManager.gameObject.GetComponent<Canvas>().scaleFactor;
-    }
-
-    public IEnumerator LerpMoveObject(RectTransform rectTransform, CharacterSheet enemy, MovePanelType type, bool open)
-    {
-        float timeOfTravel = 0.4f; //time to object reach a target place 
-        float currentTime = 0; // actual floting time 
-        float normalizedValue;
-
-        rectTransform.ForceUpdateRectTransforms();
-
-        if (type == MovePanelType.leftRight)
-        {
-            if (open)
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x - (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-            }
-            else
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x + (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-
-                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
-                Debug.Log("Lerp Close Panel");
-            }
-        }
-        else if (type == MovePanelType.rightLett)
-        {
-            if (!open)
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x - (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-
-                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
-            }
-            else
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x + (rectTransform.sizeDelta.x * ScaleFactor()), rectTransform.position.y, rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-
-                Debug.Log("Lerp Close Panel");
-            }
-        }
-        else if (type == MovePanelType.topBotton)
-        {
-            if (open)
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y - (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-
-            }
-            else
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y + (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-
-                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
-            }
-        }
-        else if (type == MovePanelType.bottonTop)
-        {
-            if (!open)
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y - (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-
-                rectTransform.transform.GetChild(rectTransform.transform.childCount - 1).gameObject.SetActive(true);
-            }
-            else
-            {
-                Vector3 startPosition = rectTransform.position;
-                Vector3 endPosition = new Vector3(rectTransform.position.x, rectTransform.position.y + (rectTransform.sizeDelta.y * ScaleFactor()), rectTransform.position.z);
-
-                while (currentTime <= timeOfTravel)
-                {
-                    currentTime += Time.deltaTime;
-                    normalizedValue = currentTime / timeOfTravel; // we normalize our time 
-
-                    rectTransform.position = Vector3.Lerp(startPosition, endPosition, normalizedValue);
-                    yield return null;
-                }
-            }
-        }
-    }    
-    
-    public void LerpCloseObject_LeftRight(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = false;
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.leftRight, false));
-    }
-
-    public void LerpOpenObject_LeftRight(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = true;
-        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
-
-        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.leftRight, true));
-    }
-
-    public void LerpCloseObject_RightLeft(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = false;
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.rightLett, false));
-    }
-
-    public void LerpOpenObject_RightLeft(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = true;
-        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
-
-        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.rightLett, true));
-    }
-
-    public void LerpCloseObject_TopBotton(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = false;
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.topBotton, false));
-    }
-
-    public void LerpOpenObject_TopBotton(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = true;
-        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
-
-        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.topBotton, true));
-    }
-
-    public void LerpCloseObject_BottonTop(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = false;
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.bottonTop, false));
-    }
-
-    public void LerpOpenObject_BottonTop(RectTransform panel)
-    {
-        panel.GetComponent<UIPanel>().isActive = true;
-        panel.GetComponent<UIPanel>().AjustSizeAsGrid();
-
-        panel.transform.GetChild(panel.transform.childCount - 1).gameObject.SetActive(false);
-        StartCoroutine(LerpMoveObject(panel, new CharacterSheet(), MovePanelType.bottonTop, true));
     }
 }

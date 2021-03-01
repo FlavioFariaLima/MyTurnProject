@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerCommands : MonoBehaviour
 {
     List<PlayerCharacterController> selectedCharacters;
-    public bool playerIsAttacking;
+    public bool playerIsAttacking = false;
     public Actions.AttackType attackType;
 
     // Start is called before the first frame update
@@ -46,7 +46,7 @@ public class PlayerCommands : MonoBehaviour
         return selectedCharacters[0].transform;
     }
 
-    public Transform GetLastelectedCharacter()
+    public Transform GetLastSelectedCharacter()
     {
         return selectedCharacters[selectedCharacters.Count - 1].transform;
     }

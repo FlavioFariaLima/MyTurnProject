@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Balder
   m_EditorClassIdentifier: 
   characterName: Balder
+  portrait: {fileID: 21300000, guid: 162181dc40caad54ebde25bb821db021, type: 3}
   level: 1
   xp: 0
   race: {fileID: 11400000, guid: f23c2883bdb2fb140b0583870cca18bc, type: 2}

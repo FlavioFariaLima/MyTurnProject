@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 812500c6b5d4b51418ff04ea0e3d7420, type: 3}
   m_Name: Small Fish
   m_EditorClassIdentifier: 
-  itemName: Small Fish
-  itemIcon: {fileID: 21300000, guid: be5129279b1dfca4ab4fa9ddc1c574f0, type: 3}
-  description: A small dead fish..
+  itemName: Meat
+  itemIcon: {fileID: 21300000, guid: d61cf5d2b65731d41842b4d6eacd95ce, type: 3}
   itemType: 2
+  description: A small pieace of meat..
   itemProperties: 02000000
   weight: 0.2
   canStock: 0

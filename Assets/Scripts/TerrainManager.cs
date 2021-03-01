@@ -7,7 +7,6 @@ using UnityEngine.EventSystems;
 
 public class TerrainManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-
     // Start is called before the first frame update
     void Start()
     {
@@ -17,11 +16,12 @@ public class TerrainManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     // Update is called once per frame
     void LateUpdate()
     {
+
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (Global.Commands.GetSelectedCharacters().Count > 0)
+        if (Global.Commands.GetSelectedCharacters().Count > 0 && !Global.Commands.GetSelectedCharacters()[0].IsAi())
         {
             //Use this to tell when the user left-clicks on the Button
             if (eventData.button == PointerEventData.InputButton.Left)
@@ -31,6 +31,7 @@ public class TerrainManager : MonoBehaviour, IPointerEnterHandler, IPointerExitH
                 if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))
                 {
                     StartCoroutine(Global.Commands.GetMainSelectedCharacterTransform().GetComponent<PlayerCharacterController>().MoveToPosition(hit.point));
+                    StartCoroutine(Global.UI.ShowDestinationPoint());
                 }
             }
         }

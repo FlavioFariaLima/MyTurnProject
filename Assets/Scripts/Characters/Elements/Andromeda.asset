@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Andromeda
   m_EditorClassIdentifier: 
   characterName: Andromeda
+  portrait: {fileID: 21300000, guid: cd58af98c336f4a48b70e930eedbebdb, type: 3}
   level: 1
   xp: 0
   race: {fileID: 11400000, guid: e010cac0f93abe340a04ee7162fb5bc7, type: 2}

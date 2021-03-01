@@ -29,10 +29,10 @@ public class MatchManager : MonoBehaviour
     [SerializeField] private int waitUntilStartTurn = 3; // In Seconds
     private float globalTime;
     private float turnTime;
-    private int turnOwnerId;
+    private int turnOwnerIndex;
     public int TurnOwnerId
     {
-        get { return turnOwnerId;}
+        get { return turnOwnerIndex;}
     }
     private int turnsCount;
     public int CurrentTurn
@@ -111,37 +111,34 @@ public class MatchManager : MonoBehaviour
 
     private void SetupCharacterController()
     {
-        inGameCharacters[turnOwnerId].controller.ResetActions();
-        Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerId].controller);
-        Global.UI.UpdateCharacterIcon(inGameCharacters[turnOwnerId]);
-        Global.UI.UpdateMovementBar(inGameCharacters[turnOwnerId]);
+        inGameCharacters[turnOwnerIndex].controller.ResetActions();
         Global.UI.DisablActionsBtns();
 
-        if (inGameCharacters[turnOwnerId].controller.IsAi() && inGameCharacters[turnOwnerId].controller.GetPlayerAI() == null)
+        if (inGameCharacters[turnOwnerIndex].controller.IsAi() && inGameCharacters[turnOwnerIndex].controller.GetPlayerAI() == null)
         {
-            StartCoroutine(inGameCharacters[turnOwnerId].controller.StartAI());
-
-            inGameCharacters[turnOwnerId].controller.IsAi(true);
+            Global.UI.pathLine.gameObject.SetActive(false);
+            StartCoroutine(inGameCharacters[turnOwnerIndex].controller.StartAI());
         }
 
-        if (!inGameCharacters[turnOwnerId].controller.IsAi())
+        if (inGameCharacters[turnOwnerIndex].controller.IsAi())
         {
-        }
-        else
-        {
-            inGameCharacters[turnOwnerId].controller.GetPlayerAI().CanEndTurn(true);
+            inGameCharacters[turnOwnerIndex].controller.GetPlayerAI().CanEndTurn(true);
         }
 
-        inGameCharacters[turnOwnerId].controller.SelectedForAct(true);
+        inGameCharacters[turnOwnerIndex].controller.SelectedForAct(true);
 
-        if (inGameCharacters[turnOwnerId].GetPlayerId() == mainPlayer.GetId())
+        if (inGameCharacters[turnOwnerIndex].GetPlayerId() == mainPlayer.GetId())
         {
-            Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerId].controller);
+            Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerIndex].controller);
         }
 
-        playerTurn = matchPlayers[inGameCharacters[turnOwnerId].GetPlayerId()];
+        playerTurn = matchPlayers[inGameCharacters[turnOwnerIndex].GetPlayerId()];
+        Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerIndex].controller);
 
-        UpdateIconStatus(inGameCharacters[turnOwnerId], true);
+        Global.UI.characterSelectedToUI = inGameCharacters[turnOwnerIndex];
+        Global.UI.SelectCharacterForUI(inGameCharacters[turnOwnerIndex].GetId());
+
+        UpdateIconStatus(inGameCharacters[turnOwnerIndex], true);
     }
 
     /// <summary>
@@ -184,12 +181,12 @@ public class MatchManager : MonoBehaviour
     private void SettingFirstRound()
     {        
         turnsCount = 0;
-        turnOwnerId = 0;
+        turnOwnerIndex = 0;
         SetupCharactersOrderAndIcons();
-        characterRound = inGameCharacters[turnOwnerId]; // Set the first player to play
+        characterRound = inGameCharacters[turnOwnerIndex]; // Set the first player to play
 
         // Show Character Information
-        Global.UI.ShowCharacterInfo(characterRound);
+        Global.UI.UpdateCharacterInfoPanel(characterRound);
 
         //Debug.Log("Starting Match...");
         // Starting Match
@@ -203,13 +200,16 @@ public class MatchManager : MonoBehaviour
         for (int position = 0; position < inGameCharacters.Count; position++)
         {
             GameObject charIcon = Instantiate(Global.UI.CharacterIconsPrefab, Global.UI.CharacterSheetIcons.transform);
+            charIcon.name = inGameCharacters[position].GetId().ToString();
 
             int p = position;
 
-            charIcon.GetComponent<Button>().onClick.AddListener(delegate { MoveCameraToCharacter(p); });
+            charIcon.GetComponent<Button>().onClick.AddListener(delegate { 
+                CharacterIconClick(p); 
+            });
 
             charIcon.transform.Find("Name").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].GetName();
-            charIcon.transform.Find("Portrait").GetComponent<Image>().sprite = inGameCharacters[position].CharPortrait;
+            charIcon.transform.Find("Portrait").GetComponent<Image>().sprite = inGameCharacters[position].Portrait();
             charIcon.transform.Find("Health").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].GetCurrrentHelth().ToString();
             charIcon.transform.Find("HealthBar").GetComponent<Slider>().maxValue = inGameCharacters[position].GetHealth();
             charIcon.transform.Find("HealthBar").GetComponent<Slider>().value = inGameCharacters[position].GetCurrrentHelth();
@@ -217,6 +217,20 @@ public class MatchManager : MonoBehaviour
             charIcon.transform.Find("AC").GetComponent<TextMeshProUGUI>().text = inGameCharacters[position].GetArmour().ToString();
 
             inGameCharacters[position].CharIcon = charIcon;
+        }
+    }
+
+    public void UpdateCharactersIcons()
+    {
+        for (int i = 0; i < Global.UI.CharacterSheetIcons.transform.childCount; i++)
+        {
+            Global.UI.CharacterSheetIcons.transform.GetChild(i).Find("Name").GetComponent<TextMeshProUGUI>().text = inGameCharacters[i].GetName();
+            Global.UI.CharacterSheetIcons.transform.GetChild(i).Find("Portrait").GetComponent<Image>().sprite = inGameCharacters[i].Portrait();
+            Global.UI.CharacterSheetIcons.transform.GetChild(i).Find("Health").GetComponent<TextMeshProUGUI>().text = inGameCharacters[i].GetCurrrentHelth().ToString();
+            Global.UI.CharacterSheetIcons.transform.GetChild(i).Find("HealthBar").GetComponent<Slider>().maxValue = inGameCharacters[i].GetHealth();
+            Global.UI.CharacterSheetIcons.transform.GetChild(i).Find("HealthBar").GetComponent<Slider>().value = inGameCharacters[i].GetCurrrentHelth();
+            Global.UI.CharacterSheetIcons.transform.GetChild(i).Find("Iniciative").GetComponent<TextMeshProUGUI>().text = inGameCharacters[i].MatchIniciative.ToString();
+            Global.UI.CharacterSheetIcons.transform.GetChild(i).Find("AC").GetComponent<TextMeshProUGUI>().text = inGameCharacters[i].GetArmour().ToString();
         }
     }
 
@@ -269,13 +283,14 @@ public class MatchManager : MonoBehaviour
         }
     }
 
-    public void MoveCameraToCharacter(int index)
+    public void CharacterIconClick(int index)
     {
         Vector3 p = inGameCharacters[index].controller.characterPosition;
         StartCoroutine(Global.UI.mainCamera.GoToCharacter(p));
 
         // Show Character Information
-        Global.UI.ShowCharacterInfo(inGameCharacters[index]);
+        Global.UI.UpdateCharacterInfoPanel(inGameCharacters[index]);
+        inGameCharacters[index].controller.SelectedForUI(true);
 
         Debug.Log($"Go to Position: {p}");
     }
@@ -283,11 +298,11 @@ public class MatchManager : MonoBehaviour
     IEnumerator TurnStart()
     {
         SetupCharacterController();
-        inGameCharacters[turnOwnerId].controller.AllowToMove(true);
+        inGameCharacters[turnOwnerIndex].controller.AllowToMove(true);
         Global.UI.SetCursor(Global.UI.cursorDefault, false);
 
         // Change UI Indicator
-        Global.UI.TurnPanel.transform.Find("PlayerTurn").GetComponent<TextMeshProUGUI>().text = $"Round {turnsCount + 1}";
+        Global.UI.TurnPanel.transform.Find("TurnCounter").GetComponent<TextMeshProUGUI>().text = $"{turnsCount + 1}";
 
         float totalTime = waitUntilStartTurn;
         float timeAlertRest = 3;
@@ -299,7 +314,6 @@ public class MatchManager : MonoBehaviour
             var integer = (int)totalTime; /* choose how to quantize this */
 
             Global.UI.TurnPanel.transform.Find("Timer").GetComponent<TextMeshProUGUI>().text = integer.ToString();
-            Global.UI.TurnPanel.GetComponent<Image>().color = new Color(1, 0, 0, 0.3f);
 
             yield return null;
         }
@@ -319,7 +333,6 @@ public class MatchManager : MonoBehaviour
         if (totalTime <= 2)
         {
             Global.UI.TurnPanel.transform.Find("Timer").GetComponent<TextMeshProUGUI>().text = "Go!";
-            Global.UI.TurnPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0.3f);
 
             yield return StartCoroutine(TurnRolling());
         }
@@ -327,7 +340,7 @@ public class MatchManager : MonoBehaviour
 
     IEnumerator TurnRolling()
     {
-        Global.UI.TurnPanel.transform.Find("PlayerTurn").GetComponent<TextMeshProUGUI>().text = $"Round {turnsCount + 1}";
+        Global.UI.TurnPanel.transform.Find("TurnCounter").GetComponent<TextMeshProUGUI>().text = $"{turnsCount + 1}";
         characterRound.isMyTurn = true;
 
         float totalTime = turnDuration;
@@ -367,12 +380,12 @@ public class MatchManager : MonoBehaviour
         StopAllCoroutines();
 
         // Change Player
-        if (turnOwnerId >= inGameCharacters.Count - 1)
-            turnOwnerId = 0;
+        if (turnOwnerIndex >= inGameCharacters.Count - 1)
+            turnOwnerIndex = 0;
         else
-            turnOwnerId++;
+            turnOwnerIndex++;
 
-        if (!inGameCharacters[turnOwnerId].IsAlive())
+        if (!inGameCharacters[turnOwnerIndex].IsAlive())
         {
             TurnEnd();
             return;
@@ -381,7 +394,7 @@ public class MatchManager : MonoBehaviour
         UpdateIconStatus(characterRound, false);
         characterRound.isMyTurn = false; // Its not this character turn anymore
         characterRound.controller.AllowToMove(false);
-        characterRound = inGameCharacters[turnOwnerId]; // Change to next character
+        characterRound = inGameCharacters[turnOwnerIndex]; // Change to next character
 
         // Counting Rounds
         turnsCount++;

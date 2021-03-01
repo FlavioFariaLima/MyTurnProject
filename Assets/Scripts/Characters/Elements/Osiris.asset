@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Osiris
   m_EditorClassIdentifier: 
   characterName: Osiris
+  portrait: {fileID: 21300000, guid: a219f3d3d5a4fd24287041921f22e74e, type: 3}
   level: 1
   xp: 0
   race: {fileID: 11400000, guid: e010cac0f93abe340a04ee7162fb5bc7, type: 2}

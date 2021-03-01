@@ -132,7 +132,10 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public bool CheckMovement()
     {
-        Global.UI.UpdateMovementBar(character);
+        if (!Global.UI.characterSelectedToUI)
+            Global.UI.characterSelectedToUI = this.character;
+
+        Global.UI.UpdateCurrentCharacterInfo();
 
         if (hasMoved < character.GetMovement())
         {
@@ -165,10 +168,10 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             canShoot = false;
             Global.UI.DisableActionBtn("Melee");
             Global.UI.DisableActionBtn("Range");
+            Global.UI.SetCursor(Global.UI.cursorDefault, false);
             return false;
         }
     }
-
 
     public NavMeshAgent CharacterAgent
     {
@@ -248,7 +251,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     // AI Control
     public void IsAi(bool ai)
     {
-        isAI = ai;       
+        isAI = ai;
     }
 
     public bool IsAi()
@@ -268,7 +271,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             while (character.isMyTurn)
             {
-                
                 yield return null;
             }
         }
@@ -395,7 +397,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             }
 
             // Show Character Information
-            Global.UI.ShowCharacterInfo(character);
+            Global.UI.UpdateCharacterInfoPanel(character);
             SelectedForUI(true);
         }
         else
@@ -404,7 +406,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             {
                 Global.Commands.GetSelectedCharacters()[0].AttackEnemy(this.character, Global.Commands.attackType);
                 Global.Commands.playerIsAttacking = false;
-
             }
             else
             {
@@ -463,7 +464,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                 target.y = 0;
 
                 transform.LookAt(target, Vector3.up);
-
             }
 
             yield return null;
@@ -529,7 +529,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public IEnumerator MoveToPosition(Vector3 dest)
     {
-        if (character.isMyTurn && canMove)
+        if (character.isMyTurn && CheckMovement())
         {
             movementSofar = hasMoved;
             NavMeshPath path = new NavMeshPath();
@@ -575,24 +575,25 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public IEnumerator LookAtPosition(Transform target)
     {
-        float duration = 1f;
-        float elapsed = 0;
-        Vector3 direction = target.position - transform.position;
-        Quaternion toRotation = Quaternion.FromToRotation(transform.forward, direction);
-        toRotation.y = 0f;
+        //float duration = 1f;
+        //float elapsed = 0;
+        //Vector3 direction = target.position - transform.position;
+        //Quaternion toRotation = Quaternion.FromToRotation(transform.forward, direction);
+        //toRotation.y = 0f;
 
-        float angle = Vector3.Angle((target.position - transform.position), transform.forward);
+        //float angle = Vector3.Angle((target.position - transform.forward), transform.forward);
 
-        if (angle > 15)
-        {
-            while (elapsed < duration)
-            {
-                //angle = Vector3.Angle((target.position - transform.position), transform.forward);
-                transform.rotation = Quaternion.Slerp(transform.rotation, toRotation, elapsed / duration);
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-        }
+        //if (angle > 15)
+        //{
+        //    while (elapsed < duration)
+        //    {
+        //        //angle = Vector3.Angle((target.position - transform.position), transform.forward);
+        //        transform.rotation = Quaternion.Slerp(transform.rotation, toRotation, elapsed / duration);
+        //        elapsed += Time.deltaTime;
+        //        yield return null;
+        //    }
+        //}
+        yield return null;
     }
 
     /// <summary>
@@ -609,7 +610,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             Debug.Log($"Move to Attack!");
 
             AllowToMove(true);
-            canMove = true;
             StartCoroutine(MoveToPosition(dest));
             characterAgent.stoppingDistance = 1.5f;
             //float angle = 10;
@@ -744,7 +744,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             LaunchProjectile();
             RotateCharacter();
 
-            Debug.Log("Projectile...");
             yield return null;
         }
 
@@ -810,7 +809,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             }
         }
 
-        //added final position argument to draw the last line node to the actual target
+        // added final position argument to draw the last line node to the actual target
         void Visualize(Vector3 vo, Vector3 finalPos)
         {
             for (int i = 0; i < lineSegment; i++)
@@ -860,8 +859,10 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     /// </summary>
     private IEnumerator ShowMovementPath()
     {
-        while (CanAct && CanMove)
-        {
+        while (CanAct && CheckMovement() && !Global.Commands.GetSelectedCharacters()[0].IsAi())
+        {            
+
+            Global.UI.pathLine.gameObject.SetActive(true);
             RaycastHit hit;
 
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100))
@@ -873,13 +874,9 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
                 {
                     yield return null;
                 }
-                else if (Global.Commands.GetSelectedCharacters()[0].IsAi())
-                {
-                    yield return null;
-                }
 
-                Global.UI.pathLine.startWidth = 0.05f;
-                Global.UI.pathLine.endWidth = 0.05f;
+                Global.UI.pathLine.startWidth = 0.02f;
+                Global.UI.pathLine.endWidth = 0.02f;
                 Global.UI.pathLine.colorGradient = Global.UI.gradient;
 
                 Global.Commands.GetSelectedCharacters()[0].movementSofar = Global.Commands.GetSelectedCharacters()[0].HasMoved;
@@ -931,7 +928,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
                     if (Global.UI.pathLine.positionCount > 0 && !Global.Commands.GetSelectedCharacters()[0].IsAi())
                         Global.UI.distanceInfo.rectTransform.position = Camera.main.WorldToScreenPoint(Global.UI.pathLine.GetPosition(Global.UI.pathLine.positionCount - 1));
-
                 }
                 else
                 {
@@ -941,6 +937,8 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             yield return null;
         }
+
+        Global.UI.pathLine.gameObject.SetActive(false);
 
         if (!Global.Commands.playerIsAttacking)
             Global.UI.distanceInfo.gameObject.SetActive(false);
@@ -1014,13 +1012,13 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public bool AttackRange()
     {
+
         if (canAct && CheckAttacks())
         {
-            CheckAttacks();
-
-            StartCoroutine(ShowProjectilePath());
+            canMove = false;
             Global.Commands.playerIsAttacking = true;
             Global.Commands.attackType = Actions.AttackType.range;
+            StartCoroutine(ShowProjectilePath());
 
             cursor.gameObject.SetActive(true);
             lineVisual.gameObject.SetActive(true);
@@ -1041,8 +1039,8 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public void ResetActions()
     {
-        canMove = false;
         hasMoved = 0;
+        canMove = true;
         canAct = true;
         character.RestartStats();
 
