@@ -5,21 +5,31 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Data", menuName = "UltraMare/Create Item", order = 1)]
 public class ItemBlueprint : ScriptableObject
 {
-    [SerializeField] public string itemName;
-    [SerializeField] public Sprite itemIcon;
-    [SerializeField] public ItemType itemType;
-    [SerializeField] public string description;
+    [Header("Item Information")]
+    public string itemName;
+    public Sprite itemIcon;
+    public ItemType itemType;
+    public string description;
 
+    [Header("Item Basic Stats")]
     public List<MyParameters.ItemProperties> itemProperties;
+    public float condition;
+    public float weight;
+    public bool canStock;
+    public int maxStock;
+    public float onUseValue;
 
-    [SerializeField] public float weight;
-    [SerializeField] public bool canStock;
-    [SerializeField] public int maxStock;
+    [Header("Item Alternative Information")]
+    public List<string> alternativeNames = new List<string>();
+    public List<Sprite> alternativeIcons = new List<Sprite>();
 
-    [SerializeField] public float onUseValue;
-    [SerializeField] public float condition;
-
-    // Alternative Status
-    [SerializeField] public List<string> alternativeNames = new List<string>();
-    [SerializeField] public List<Sprite> alternativeIcons = new List<Sprite>();
+    [Header("Weapon Stats")]
+    public float cost;
+    public int dmgS;
+    public int dmgM;
+    public int critical;
+    public int criticalMultiply;
+    public int rangeIncrement;
+    public bool rangeOnly;
+    public WeaponType[] weaponType;
 }

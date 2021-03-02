@@ -19,7 +19,7 @@ public class DropedItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     public void TakeItem(Inventory inventory)
     {
-        UltraMare.Item newItem = UltraMare.Item.CreateNewItem(itemBlueprint);
+        Item newItem = Item.CreateNewItem(itemBlueprint);
         newItem.itemBlueprint = itemBlueprint;
 
         bool addItem = inventory.AddItem(newItem);

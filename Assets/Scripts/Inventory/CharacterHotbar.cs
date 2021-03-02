@@ -6,7 +6,7 @@ using UnityEngine;
 public class CharacterHotbar : MonoBehaviour
 {
 
-    [SerializeField] public Dictionary<int, UltraMare.Item> Items = new Dictionary<int, UltraMare.Item>();
+    [SerializeField] public Dictionary<int, Item> Items = new Dictionary<int, Item>();
     [SerializeField] private int maxSpace = 10;
 
     // Start is called before the first frame update
@@ -15,7 +15,7 @@ public class CharacterHotbar : MonoBehaviour
         
     }
 
-    public bool AddItem(UltraMare.Item item, int index, int myIndex, bool isChangingPos)
+    public bool AddItem(Item item, int index, int myIndex, bool isChangingPos)
     {
         if (Items.Count >= maxSpace)
         {
@@ -34,7 +34,7 @@ public class CharacterHotbar : MonoBehaviour
         }
         else
         {
-            UltraMare.Item oldItem = Items[index];
+            Item oldItem = Items[index];
             Items[myIndex] = oldItem;
             Items[index] = item;
         }

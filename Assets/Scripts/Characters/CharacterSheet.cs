@@ -31,8 +31,8 @@ public class CharacterSheet: MonoBehaviour
         set { numberOfAttacks = value; }
     }
 
-    [SerializeField] private Weapon meleeWeapon;
-    [SerializeField] private Weapon rangeWeapon;
+    [SerializeField] private WeaponStats meleeWeapon;
+    [SerializeField] private WeaponStats rangeWeapon;
 
     // Health
     private int currentHealth = 0;
@@ -140,6 +140,11 @@ public class CharacterSheet: MonoBehaviour
 
     public int GetMeleeDamage()
     {
+        if (controller.Equipment().GetEquippedMeleeWeapon() != null)
+            characterInfo.meleeDamage = controller.Equipment().GetEquippedMeleeWeapon().weaponStats.dmgM;
+        else
+            characterInfo.meleeDamage = 2;
+
         return characterInfo.meleeDamage;
     }
 
@@ -150,6 +155,11 @@ public class CharacterSheet: MonoBehaviour
 
     public int GetRangeDamage()
     {
+        if (controller.Equipment().GetEquippedRangeWeapon() != null)
+            characterInfo.rangeDamage = controller.Equipment().GetEquippedRangeWeapon().weaponStats.dmgM;
+        else
+            characterInfo.rangeDamage = 2;
+
         return characterInfo.rangeDamage;
     }
     
@@ -245,21 +255,5 @@ public class Creature
         small = -1,
         medium = 0,
         big = 1
-    }
-}
-
-[Serializable]
-public class Weapon
-{
-    private string weaponName;
-    private int damage;
-
-    public string WeaponName()
-    {
-        return weaponName;
-    }
-    public int WeaponDamage()
-    {
-        return damage;
     }
 }

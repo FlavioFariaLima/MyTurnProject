@@ -30,6 +30,12 @@ public class MatchManager : MonoBehaviour
     private float globalTime;
     private float turnTime;
     private int turnOwnerIndex;
+
+    public int GetTurnOwnerIndex()
+    {
+        return turnOwnerIndex;
+    }
+
     public int TurnOwnerId
     {
         get { return turnOwnerIndex;}
@@ -58,7 +64,8 @@ public class MatchManager : MonoBehaviour
         // Set Players For The Match!
         playersCount = tempPlayers.Count;
 
-        FindMatchPlayers();
+        Task startMatch = FindMatchPlayers();
+        startMatch.Wait();
 
         SetPlayerCharactersShotCut(mainPlayer);
     }
@@ -113,7 +120,6 @@ public class MatchManager : MonoBehaviour
     {
         inGameCharacters[turnOwnerIndex].controller.ResetActions();
         Global.UI.DisablActionsBtns();
-
         if (inGameCharacters[turnOwnerIndex].controller.IsAi() && inGameCharacters[turnOwnerIndex].controller.GetPlayerAI() == null)
         {
             Global.UI.pathLine.gameObject.SetActive(false);

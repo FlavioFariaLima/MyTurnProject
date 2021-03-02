@@ -9,10 +9,10 @@ using UnityEngine.EventSystems;
 public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Character States")]
-    private MyParameters.TurnState turn;
     public CharacterSheet character;
     private Inventory inventory;
     private CharacterHotbar hotbar;
+    [SerializeField] private CharacterEquipment equipment;
     private GameObject selectedEffect;
 
     [Header("Movement and NavMesh")]
@@ -61,6 +61,14 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     [SerializeField] private TextMeshPro infoName;
     private bool mouseIsOver;
     private bool isSelectedForUI = false;
+
+    public CharacterEquipment Equipment()
+    {
+        if (equipment == null)
+            equipment = GetComponent<CharacterEquipment>();
+
+        return equipment;
+    }
 
     public Inventory Inventory()
     {
@@ -178,8 +186,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         get { return characterAgent; }
     }
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
         AI = transform.GetComponent<AICharacterController>();
         cam = Camera.main;
@@ -187,6 +194,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         // Character
         character = GetComponent<CharacterSheet>();
         inventory = GetComponent<Inventory>();
+        equipment = GetComponent<CharacterEquipment>();
         hotbar = GetComponent<CharacterHotbar>();
         character.controller = this;
         gameObject.name = character.GetName();
@@ -199,6 +207,12 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         // Info Interface
         infoName.text = character.GetName();
         infoName.gameObject.SetActive(false);
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+      
     }
 
     // Update is called once per frame
@@ -507,7 +521,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             if (checkDetination)
             {
-                Debug.Log("test2");
                 if (DestinationReached())
                 {
                     if (destinationStation != null)
@@ -739,7 +752,9 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         );
         lineVisual.colorGradient = restartAlpha;
 
-        while (Global.Commands.attackType == Actions.AttackType.range && Global.Commands.playerIsAttacking && !isAI)
+        bool attacked = false;
+
+        while (!attacked && Global.Commands.attackType == Actions.AttackType.range && Global.Commands.playerIsAttacking && !isAI)
         {
             LaunchProjectile();
             RotateCharacter();
@@ -1012,8 +1027,9 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     public bool AttackRange()
     {
+       bool att = CheckAttacks();
 
-        if (canAct && CheckAttacks())
+        if (att && canAct)
         {
             canMove = false;
             Global.Commands.playerIsAttacking = true;

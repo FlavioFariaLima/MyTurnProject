@@ -34,33 +34,33 @@ public static class Global
 
         if (UI.panel_PlayerInventory.activeSelf)
         {
-            if (UI.slotsParent_PlayerInventory.transform.childCount < UI.CharacterInventory.InventorySize())
+            if (UI.slotsParent_characterInventory.transform.childCount < UI.CharacterInventory.InventorySize())
             {
-                for (int i = 0; i <= UI.CharacterInventory.InventorySize() - UI.slotsParent_PlayerInventory.transform.childCount; i++)
+                for (int i = 0; i <= UI.CharacterInventory.InventorySize() - UI.slotsParent_characterInventory.transform.childCount; i++)
                 {
-                    UI.slotsParent_PlayerInventory.transform.GetChild(UI.slotsParent_PlayerInventory.transform.childCount - i).gameObject.gameObject.SetActive(true);
+                    UI.slotsParent_characterInventory.transform.GetChild(UI.slotsParent_characterInventory.transform.childCount - i).gameObject.gameObject.SetActive(true);
                 }
             }
             else
             {
-                for (int i = 1; i <= UI.slotsParent_PlayerInventory.transform.childCount - UI.CharacterInventory.InventorySize(); i++)
+                for (int i = 1; i <= UI.slotsParent_characterInventory.transform.childCount - UI.CharacterInventory.InventorySize(); i++)
                 {
-                    UI.slotsParent_PlayerInventory.transform.GetChild(UI.slotsParent_PlayerInventory.transform.childCount - i).gameObject.gameObject.SetActive(false);
+                    UI.slotsParent_characterInventory.transform.GetChild(UI.slotsParent_characterInventory.transform.childCount - i).gameObject.gameObject.SetActive(false);
                 }
             }
 
-            UI._playerSlots = UI.slotsParent_PlayerInventory.GetComponentsInChildren<InventorySlot>();
+            UI.inventorySlots = UI.slotsParent_characterInventory.GetComponentsInChildren<InventorySlot>();
 
-            for (int i = 0; i < UI.slotsParent_PlayerInventory.transform.childCount; i++)
+            for (int i = 0; i < UI.slotsParent_characterInventory.transform.childCount; i++)
             {
                 if (i < UI.CharacterInventory.InventorySize())
-                    UI.slotsParent_PlayerInventory.transform.GetChild(i).gameObject.SetActive(true);
+                    UI.slotsParent_characterInventory.transform.GetChild(i).gameObject.SetActive(true);
                 else
                 {
                     if (i < UI.CharacterInventory.Items.Count + 1)
-                        UI.slotsParent_PlayerInventory.transform.GetChild(i).gameObject.SetActive(true);
+                        UI.slotsParent_characterInventory.transform.GetChild(i).gameObject.SetActive(true);
                     else
-                        UI.slotsParent_PlayerInventory.transform.GetChild(i).gameObject.SetActive(false);
+                        UI.slotsParent_characterInventory.transform.GetChild(i).gameObject.SetActive(false);
                 }
             }
         }
@@ -213,7 +213,8 @@ public static class MyParameters
     {
         PlayerInventory = 0,
         OtherInventory = 1,
-        Hotbar = 2
+        Hotbar = 2,
+        Equipment = 3
     }
 
     public enum StationType

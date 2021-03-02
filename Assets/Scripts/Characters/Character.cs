@@ -189,5 +189,3 @@ public class Skills
     public int search;
 
 }
-
-

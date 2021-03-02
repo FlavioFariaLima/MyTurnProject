@@ -46,11 +46,13 @@ public class InterfaceManager : MonoBehaviour
     [Header("Characters Panel")]
     [SerializeField] private GameObject characterInfo;
     public GameObject panel_PlayerInventory;
-    public GameObject slotsParent_PlayerInventory;
+    public GameObject slotsParent_characterInventory;
+    public GameObject slotsParent_characterEquipment;
     public GameObject characterCraftPanel;
     public GameObject craftSlotsParents;
     public GameObject craftSlotPrefab;
-    public InventorySlot[] _playerSlots;
+    public InventorySlot[] inventorySlots;
+    public InventorySlot[] equipmentSlots;
     [SerializeField] private GameObject characterActions;
     [SerializeField] public RectTransform enemyInfo;
     [SerializeField] private GameObject portrait;
@@ -186,7 +188,8 @@ public class InterfaceManager : MonoBehaviour
         characterInfo.SetActive(false);
 
         characterInventory = selectedCharacterObject.GetComponent<Inventory>();
-        _playerSlots = slotsParent_PlayerInventory.GetComponentsInChildren<InventorySlot>();
+        equipmentSlots = slotsParent_characterEquipment.GetComponentsInChildren<InventorySlot>();
+        inventorySlots = slotsParent_characterInventory.GetComponentsInChildren<InventorySlot>();
         _hotbarSlots = slotsParent_playerHotbar.GetComponentsInChildren<InventorySlot>();
 
         // Inicia Globals
@@ -312,7 +315,7 @@ public class InterfaceManager : MonoBehaviour
                 RaycastResult destinySlot = new RaycastResult();
                 destinySlot.gameObject = new GameObject();
 
-                if (mouseOverSlot.transform.parent.gameObject == Global.UI.slotsParent_PlayerInventory)
+                if (mouseOverSlot.transform.parent.gameObject == Global.UI.slotsParent_characterInventory)
                     destinySlot.gameObject.name = "Station";
 
                 else if (mouseOverSlot.transform.parent.parent.name == "OtherInventory")
@@ -347,15 +350,15 @@ public class InterfaceManager : MonoBehaviour
     public void UpdateCharacterInventory()
     {
         // Player Inventory
-        for (int i = 0; i < _playerSlots.Length; i++)
+        for (int i = 0; i < inventorySlots.Length; i++)
         {
             if (i < CharacterInventory.Items.Count)
             {
-                _playerSlots[i].HoldSlot(CharacterInventory.Items[i]);
+                inventorySlots[i].HoldSlot(CharacterInventory.Items[i]);
             }
             else
             {
-                _playerSlots[i].CleanSlot();
+                inventorySlots[i].CleanSlot();
             }
         }
 
@@ -375,7 +378,7 @@ public class InterfaceManager : MonoBehaviour
                     _hotbarSlots[s].CleanSlot();
                 }
             }
-        }
+        }       
     }
 
     public void UpdateCharacterCraft()
@@ -401,7 +404,7 @@ public class InterfaceManager : MonoBehaviour
 
         List<ItemBlueprint> characterIngredients = new List<ItemBlueprint>();
 
-        foreach (UltraMare.Item it in CharacterInventory.Items)
+        foreach (Item it in CharacterInventory.Items)
         {
             characterIngredients.Add(it.itemBlueprint);
         }
@@ -435,7 +438,23 @@ public class InterfaceManager : MonoBehaviour
         }
     }
 
-    public void DropItem(Vector3 position, UltraMare.Item item, bool reverseDir)
+    public void UpdateCharacterEquipment()
+    {
+        for (int s = 0; s < equipmentSlots.Length; s++)
+        {
+            if (characterSelectedToUI.controller.Equipment().equipments.ContainsKey(s))
+            {
+                var myItem = characterSelectedToUI.controller.Equipment().equipments[s];
+                equipmentSlots[s].HoldSlot(myItem);
+            }
+            else
+            {
+                equipmentSlots[s].CleanSlot();
+            }
+        }
+    }
+
+    public void DropItem(Vector3 position, Item item, bool reverseDir)
     {
         GameObject newItem = Instantiate(DropItemPrefab(), new Vector3(position.x, position.y + 1, position.z), Quaternion.identity);
         newItem.GetComponent<DropedItem>().SetItemBlueprint(item.itemBlueprint);
@@ -875,9 +894,21 @@ public class InterfaceManager : MonoBehaviour
     ///  UI - Characters Actions Buttons
     /// </summary>
     /// <param name="id"></param>
-    public void EnableActionButton(int index, bool enable)
+    public void EnableActionButton(string name, bool enable, PlayerCharacterController character)
     {
-        characterActions.transform.GetChild(index).GetComponent<Button>().interactable = enable;
+        characterActions.transform.Find(name).GetComponent<Button>().interactable = false;
+        characterActions.transform.Find(name).GetComponent<Button>().onClick.RemoveAllListeners();
+
+        if (enable)
+        {
+            characterActions.transform.Find(name).GetComponent<Button>().interactable = enable;
+
+            if (name == "Range")
+            {
+                characterActions.transform.Find(name).GetComponent<Button>().onClick.AddListener(delegate { character.AttackRange(); });
+                characterActions.transform.Find(name).GetComponent<Button>().interactable = true;
+            }
+        }
     }
 
     public void DisablActionsBtns()
@@ -918,8 +949,13 @@ public class InterfaceManager : MonoBehaviour
                 characterActions.transform.Find("Melee").GetComponent<Button>().onClick.AddListener(delegate { character.AttackMelee(); });
                 characterActions.transform.Find("Melee").GetComponent<Button>().interactable = true;
 
-                characterActions.transform.Find("Range").GetComponent<Button>().onClick.AddListener(delegate { character.AttackRange(); });
-                characterActions.transform.Find("Range").GetComponent<Button>().interactable = true;
+                bool hasRange = character.Equipment().CheckIfHasWeapon()[1];
+
+                if (hasRange)
+                {
+                    characterActions.transform.Find("Range").GetComponent<Button>().onClick.AddListener(delegate { character.AttackRange(); });
+                    characterActions.transform.Find("Range").GetComponent<Button>().interactable = true;
+                }
             }
 
             // Set Pass Turn Button
