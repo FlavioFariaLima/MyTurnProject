@@ -9,7 +9,7 @@ public class Inventory: MonoBehaviour
 
     [SerializeField] private float maxWeight;
     [SerializeField] private float curWeight;
-    [HideInInspector] private int size = 48;
+    [HideInInspector] private int size = 45;
 
     [SerializeField] List<Item> inventoryItems = new List<Item>();
 

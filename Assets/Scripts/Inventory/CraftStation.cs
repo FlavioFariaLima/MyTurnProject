@@ -13,6 +13,7 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [SerializeField] private string stationName;
     [SerializeField] private MyParameters.StationType stationType;
     [SerializeField] private GameObject activeEffect;
+    [SerializeField] private GameObject infoName;
 
     private GameObject mainInventoryPanel;
     private GameObject stationInfoPanel;
@@ -28,6 +29,7 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     private TextMeshProUGUI fuelCountOutput;
     private Button activeButton;
+    private bool mouseIsOver;
 
     public string GetStationName()
     {
@@ -49,6 +51,8 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     {
         stationInventory = GetComponent<Inventory>();
         isProcessing = false;
+
+        infoName.GetComponent<TextMeshPro>().text = stationName;
     }
 
     // Update is called once per frame
@@ -341,11 +345,13 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-
+        mouseIsOver = true;
+        StartCoroutine(InfoUI());
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        mouseIsOver = false;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -374,4 +380,20 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         }
     }
     #endregion
+
+    // Show Stuff Name
+    private IEnumerator InfoUI()
+    {
+        while (mouseIsOver)
+        {
+            infoName.SetActive(true);
+            Global.FaceTextMeshToCamera(infoName.transform);
+            transform.GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
+
+            yield return null;
+        }
+
+        infoName.SetActive(false);
+        transform.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
+    }
 }

@@ -139,8 +139,8 @@ public class MatchManager : MonoBehaviour
         }
 
         playerTurn = matchPlayers[inGameCharacters[turnOwnerIndex].GetPlayerId()];
-        Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerIndex].controller);
 
+        Global.UI.SetupActionsOwner(inGameCharacters[turnOwnerIndex].controller);
         Global.UI.characterSelectedToUI = inGameCharacters[turnOwnerIndex];
         Global.UI.SelectCharacterForUI(inGameCharacters[turnOwnerIndex].GetId());
 

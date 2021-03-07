@@ -27,7 +27,6 @@ public class CanvasManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         mouseIsOver = true;
         Global.UI.SetCursor(Global.UI.cursorDefault, true);
-        Debug.Log("Cursor Entering " + name + " GameObject");
     }
 
     //Detect when Cursor leaves the GameObject
@@ -35,7 +34,6 @@ public class CanvasManager : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     {
         mouseIsOver = false;
         Global.UI.SetCursor(Global.UI.LastCursor, false);
-        Debug.Log("Cursor Exiting " + name + " GameObject");
     }
 }
 

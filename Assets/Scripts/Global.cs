@@ -14,7 +14,6 @@ public static class Global
 
     private static GameObject dragItemImg = new GameObject();
 
-
     // Start and set prioritary parameters.
     public static void Setup()
     {
@@ -63,6 +62,8 @@ public static class Global
                         UI.slotsParent_characterInventory.transform.GetChild(i).gameObject.SetActive(false);
                 }
             }
+
+            UI.slotsParent_characterInventory.transform.parent.parent.Find("Scrollbar Vertical").GetComponent<Scrollbar>().value = 1;
         }
     }
 
@@ -168,6 +169,17 @@ public static class Global
             }
         }
     }
+
+    public static  void FaceTextMeshToCamera(Transform obj)
+    {
+        Vector3 origRot = obj.eulerAngles;
+
+        obj.LookAt(obj.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+
+        origRot.y = obj.eulerAngles.y;
+        obj.eulerAngles = origRot;
+    }
+
 }
 
 public enum MovePanelType
@@ -178,13 +190,25 @@ public enum MovePanelType
     bottonTop = 3
 }
 
+// Items
 public enum ItemType
 {
     vegetal = 0,
     mineral = 1,
     food = 2,
     tool = 3,
-    weapon = 4
+    weapon = 4,
+    armor = 5
+}
+
+public enum ItemRarity
+{
+    trash = 0,
+    commom = 1,
+    exceptional = 2,
+    uncommon = 3,
+    rare = 4,
+    unique = 5
 }
 
 public enum WeaponType

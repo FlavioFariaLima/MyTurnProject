@@ -316,7 +316,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         while (mouseIsOver || IsSelectedForUI())
         {
             infoName.gameObject.SetActive(true);
-            FaceTextMeshToCamera(infoName.transform);
+            Global.FaceTextMeshToCamera(infoName.transform);
             transform.GetComponentInChildren<Renderer>().material.EnableKeyword("_EMISSION");
 
             yield return null;
@@ -332,7 +332,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         {
             infoName.gameObject.SetActive(true);
             infoName.color = Global.UI.actColor;
-            FaceTextMeshToCamera(infoName.transform);
+            Global.FaceTextMeshToCamera(infoName.transform);
 
             yield return null;
         }
@@ -379,7 +379,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             floatText.transform.position = Vector3.Lerp(initialOffset, finalOffset, normalizedValue);
             floatText.GetComponent<TextMeshPro>().color = Color.Lerp(color_i, color_f, normalizedValue);
 
-            FaceTextMeshToCamera(floatText.transform);
+            Global.FaceTextMeshToCamera(floatText.transform);
 
             yield return null;
         }
@@ -387,15 +387,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
         Destroy(floatText);
     }
 
-    private void FaceTextMeshToCamera(Transform obj)
-    {
-        Vector3 origRot = obj.eulerAngles;
-
-        obj.LookAt(obj.transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
-
-        origRot.y = obj.eulerAngles.y;
-        obj.eulerAngles = origRot;
-    }
 
     /// <summary>
     ///  Mouse Methods
@@ -454,7 +445,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     public void OnPointerExit(PointerEventData eventData)
     { 
         mouseIsOver = false;
-        StartCoroutine(InfoUI());
+        //StartCoroutine(InfoUI());
 
         if (Global.Commands.playerIsAttacking)
         {

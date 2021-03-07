@@ -59,11 +59,13 @@ public class DropedItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public void OnPointerEnter(PointerEventData eventData)
     {
         Global.UI.SetCursor(Global.UI.cursorInteract, true);
+        Global.UI.mouseOverObject = gameObject;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         Global.UI.SetCursor(Global.UI.LastCursor, false);
+        Global.UI.mouseOverObject = null;
     }
 
 }

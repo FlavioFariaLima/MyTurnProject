@@ -227,18 +227,6 @@ public class InterfaceManager : MonoBehaviour
         RaycastHit mainHit;
 
         // Mouse Buttons
-        if (Physics.Raycast(mainRay, out mainHit, 50))
-        {
-            if (mainHit.transform.GetComponent<DropedItem>() != null)
-            {
-                mouseOverObject = mainHit.transform.gameObject;
-            }
-            else
-            {
-                mouseOverObject = null;
-            }
-        }
-
         if (true) // Only work if UI Panels are closed?
         {
             // Mouse Left Button
@@ -516,6 +504,7 @@ public class InterfaceManager : MonoBehaviour
         }
     }
 
+    // Inventory Item Portrait
     public void ShowItemInfo()
     {
         if (mouseOverSlot != null && mouseOverSlot.Item() != null) // Inventory Objects
@@ -527,9 +516,7 @@ public class InterfaceManager : MonoBehaviour
             foreach (Transform child in itemInfoPanel.transform)
             {
                 if (child.name == "ItemName")
-                {
                     child.GetComponent<TextMeshProUGUI>().text = mouseOverSlot.Item().itemName;
-                }
 
                 if (child.name == "ItemTipo")
                 {
@@ -542,30 +529,29 @@ public class InterfaceManager : MonoBehaviour
                 }
 
                 if (child.name == "ItemIcon")
-                {
-                    child.GetComponent<UnityEngine.UI.Image>().sprite = mouseOverSlot.Item().itemIcon;
-                }
+                    child.GetComponent<UnityEngine.UI.Image>().sprite = mouseOverSlot.Item().itemIcon;                
 
                 if (child.name == "Description")
-                {
-                    child.GetComponent<TextMeshProUGUI>().text = mouseOverSlot.Item().description;
-                }
+                    child.GetComponent<TextMeshProUGUI>().text = mouseOverSlot.Item().description;                
 
                 // Item Stats
-                if (child.name == "ItemValue")
+                if (child.name == "ItemMainValue")
                 {
-                    child.GetComponent<TextMeshProUGUI>().text = Mathf.Round(mouseOverSlot.Item().onUseValue).ToString();
+                    // If Weapon
+                    if (mouseOverSlot.Item().itemType == ItemType.weapon)
+                    {
+                        child.Find("Value").GetComponent<TextMeshProUGUI>().text = $"1d{mouseOverSlot.Item().weaponStats.dmgM}";
+                        child.Find("TypeInfo").GetComponent<TextMeshProUGUI>().text = $"{mouseOverSlot.Item().weaponStats.weaponType[0]}";
+                        child.Find("Value2").GetComponent<TextMeshProUGUI>().text = mouseOverSlot.Item().weaponStats.critical.ToString();
+                        child.Find("Value3").GetComponent<TextMeshProUGUI>().text = $"x{mouseOverSlot.Item().weaponStats.criticalMultiply}";
+                    }
                 }
 
                 if (child.name == "ItemCondition")
-                {
-                    child.GetComponent<TextMeshProUGUI>().text = $"{mouseOverSlot.Item().condition.ToString()} / 100";
-                }
+                    child.GetComponent<TextMeshProUGUI>().text = $"{mouseOverSlot.Item().condition.ToString()} / 100";                
 
                 if (child.name == "ItemWeight")
-                {
-                    child.GetComponent<TextMeshProUGUI>().text = $"{mouseOverSlot.Item().weight} kg";
-                }
+                    child.GetComponent<TextMeshProUGUI>().text = $"{mouseOverSlot.Item().weight} kg";                
             }
         }
         else if (mouseOverObject != null) // Scene Objects
@@ -582,9 +568,7 @@ public class InterfaceManager : MonoBehaviour
                     ItemBlueprint pointedItem = mouseOverObject.GetComponent<DropedItem>().GetItemBlueprint();
 
                     if (child.name == "ItemName")
-                    {
                         child.GetComponent<TextMeshProUGUI>().text = pointedItem.itemName;
-                    }
 
                     if (child.name == "ItemTipo")
                     {
@@ -597,30 +581,33 @@ public class InterfaceManager : MonoBehaviour
                     }
 
                     if (child.name == "ItemIcon")
-                    {
                         child.GetComponent<UnityEngine.UI.Image>().sprite = pointedItem.itemIcon;
-                    }
 
                     if (child.name == "Description")
-                    {
                         child.GetComponent<TextMeshProUGUI>().text = pointedItem.description;
-                    }
 
                     // Item Stats
-                    if (child.name == "ItemValue")
+                    if (child.name == "ItemMainValue")
                     {
-                        child.GetComponent<TextMeshProUGUI>().text = pointedItem.onUseValue.ToString();
+                        // If Weapon
+                        if (pointedItem.itemType == ItemType.weapon)
+                        {
+                            child.Find("Value").GetComponent<TextMeshProUGUI>().text = $"1d{pointedItem.dmgM}";
+                            child.Find("TypeInfo").GetComponent<TextMeshProUGUI>().text = $"{pointedItem.weaponType[0]}";
+                            child.Find("Value2").GetComponent<TextMeshProUGUI>().text = pointedItem.critical.ToString();
+                            child.Find("Value3").GetComponent<TextMeshProUGUI>().text = $"x{pointedItem.criticalMultiply}";
+
+                            child.gameObject.SetActive(true);
+                        }
+                        else
+                            child.gameObject.SetActive(false);
                     }
 
                     if (child.name == "ItemCondition")
-                    {
-                        child.GetComponent<TextMeshProUGUI>().text = $"{pointedItem.condition.ToString()} / 100";
-                    }
+                        child.GetComponent<TextMeshProUGUI>().text = $"{pointedItem.condition} / 100";
 
                     if (child.name == "ItemWeight")
-                    {
-                        child.GetComponent<TextMeshProUGUI>().text = $"{pointedItem.weight} kg";
-                    }
+                        child.GetComponent<TextMeshProUGUI>().text = $"{pointedItem.weight} kg";                    
                 }
             }
         }
@@ -732,6 +719,7 @@ public class InterfaceManager : MonoBehaviour
         CharacterInventory = character.controller.Inventory();
         CharacterHotbar = character.controller.Hotbar();
         UpdateCharacterInventory();
+        UpdateCharacterEquipment();
 
         UpdateHealthBar(character);
         UpdateMovementBar(character);

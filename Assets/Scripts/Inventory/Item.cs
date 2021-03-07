@@ -9,6 +9,7 @@ public class Item
     public string itemName;
     public Sprite itemIcon;
     public ItemType itemType;
+    public ItemRarity rarity;
     public string description;
 
     public List<MyParameters.ItemProperties> itemProperties;
@@ -42,6 +43,7 @@ public class Item
         }
 
         newItem.itemType = item.itemType;
+        newItem.rarity = item.rarity;
         newItem.description = item.description;
 
         newItem.weight = item.weight;
@@ -103,4 +105,3 @@ public struct WeaponStats
         rangeOnly = blueprint.rangeOnly;
     }
 }
-
