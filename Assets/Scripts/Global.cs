@@ -10,7 +10,7 @@ public static class Global
     public static PlayerCommands Commands;
     public static TerrainManager Terrain;
     public static MatchManager Match;
-    public static CanvasManager CanvasManager;
+    public static CanvasManager Canvas;
 
     private static GameObject dragItemImg = new GameObject();
 
@@ -18,10 +18,10 @@ public static class Global
     public static void Setup()
     {
         UI = GameObject.Find("GameManager").GetComponent<InterfaceManager>();
-        Commands = GameObject.Find("GameManager").GetComponent<PlayerCommands>();
+        Canvas = GameObject.Find("Canvas").GetComponent<CanvasManager>();
         Match = GameObject.Find("GameManager").GetComponent<MatchManager>();
+        Commands = GameObject.Find("GameManager").GetComponent<PlayerCommands>();
         Terrain = GameObject.Find("Terrain").GetComponent<TerrainManager>();
-        CanvasManager = GameObject.Find("Canvas").GetComponent<CanvasManager>();
     }
 
     // Open/Close Panels
@@ -112,62 +112,6 @@ public static class Global
     public static void ResumeGame()
     {
         Time.timeScale = 1;
-    }
-
-    // Menu and Stuff
-    public static void ShowMatchMenu()
-    {
-        UI.GetMatchMenu().transform.position = new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0);
-        UI.GetMatchMenu().SetActive(!UI.GetMatchMenu().activeSelf);
-
-        if (UI.GetMatchMenu().activeSelf)
-            PauseGame();
-        else
-            ResumeGame();
-    }
-
-    // Misc
-    public static void GetGridColumnAndRow(GridLayoutGroup glg, out int column, out int row)
-    {
-        column = 0;
-        row = 0;
-
-        if (glg.transform.childCount == 0)
-            return;
-
-        //Column and row are now 1
-        column = 1;
-        row = 1;
-
-        //Get the first child GameObject of the GridLayoutGroup
-        RectTransform firstChildObj = glg.transform.
-            GetChild(0).GetComponent<RectTransform>();
-
-        Vector2 firstChildPos = firstChildObj.anchoredPosition;
-        bool stopCountingRow = false;
-
-        //Loop through the rest of the child object
-        for (int i = 1; i < glg.transform.childCount; i++)
-        {
-            //Get the next child
-            RectTransform currentChildObj = glg.transform.
-           GetChild(i).GetComponent<RectTransform>();
-
-            Vector2 currentChildPos = currentChildObj.anchoredPosition;
-
-            //if first child.x == otherchild.x, it is a column, ele it's a row
-            if (firstChildPos.x == currentChildPos.x)
-            {
-                column++;
-                //Stop couting row once we find column
-                stopCountingRow = true;
-            }
-            else
-            {
-                if (!stopCountingRow)
-                    row++;
-            }
-        }
     }
 
     public static  void FaceTextMeshToCamera(Transform obj)

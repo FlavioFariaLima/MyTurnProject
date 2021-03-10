@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -8,6 +9,21 @@ public class Player : MonoBehaviour
     [SerializeField] private int playerId;
     [SerializeField] private List<CharacterSheet> playerCharacters;
     [SerializeField] private bool playerIsAI;
+    [SerializeField] private bool isMainPlayer;
+    [SerializeField] public int charactersCount;
+
+
+    // Public Variables Methods
+    public bool IsMainPlayer()
+    {
+        return isMainPlayer;
+    }
+
+    public int CharactersCount
+    {
+        get { return charactersCount; }
+        set { charactersCount = value; }
+    }
 
     public bool PlayerIsAI
     {
@@ -24,12 +40,6 @@ public class Player : MonoBehaviour
                 child.GetComponent<AICharacterController>().StartAI(child.GetComponent<PlayerCharacterController>(), child.GetComponent<CharacterSheet>());
             }
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     /// <summary>
@@ -52,6 +62,5 @@ public class Player : MonoBehaviour
         get { return playerCharacters; }
 
         set { playerCharacters = value; }
-    }
-    
+    }    
 }

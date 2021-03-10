@@ -23,7 +23,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     private DropedItem destinationItem;
     private CraftStation destinationStation;
     private CharacterSheet destinationCreature;
-    private MyParameters.ObjectCategory destinationCategory;
 
     public float movementSofar;
     public Vector3 characterPosition;
@@ -88,7 +87,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
     public void SelectedForUI(bool value)
     {
         isSelectedForUI = value;
-        StartCoroutine(InfoUI());
 
         if (isSelectedForUI)
         {
@@ -176,7 +174,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             canShoot = false;
             Global.UI.DisableActionBtn("Melee");
             Global.UI.DisableActionBtn("Range");
-            Global.UI.SetCursor(Global.UI.cursorDefault, false);
+            Global.Canvas.SetCursor(Global.Canvas.cursorDefault, false);
             return false;
         }
     }
@@ -313,32 +311,30 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
     private IEnumerator InfoUI()
     {
-        while (mouseIsOver || IsSelectedForUI())
+        while (mouseIsOver)
         {
-            infoName.gameObject.SetActive(true);
-            Global.FaceTextMeshToCamera(infoName.transform);
-            transform.GetComponentInChildren<Renderer>().material.EnableKeyword("_EMISSION");
+            Global.UI.floatInfoPanel.SetActive(true);
+            Global.UI.floatInfoPanel.transform.Find("infoText").GetComponent<TextMeshProUGUI>().text = character.GetName();
 
             yield return null;
         }
 
-        infoName.gameObject.SetActive(false);
-        transform.GetComponentInChildren<Renderer>().material.DisableKeyword("_EMISSION");
+        Global.UI.floatInfoPanel.SetActive(false);
     }
 
     public IEnumerator ShowReadyToActStuff()
     {
         while (IsSelectedForAct)
         {
-            infoName.gameObject.SetActive(true);
-            infoName.color = Global.UI.actColor;
-            Global.FaceTextMeshToCamera(infoName.transform);
+            //infoName.gameObject.SetActive(true);
+            //infoName.color = Global.UI.actColor;
+            //Global.FaceTextMeshToCamera(infoName.transform);
 
             yield return null;
         }
 
-        infoName.gameObject.SetActive(false);
-        infoName.color = Global.UI.defaultColor;
+        //infoName.gameObject.SetActive(false);
+        //infoName.color = Global.UI.defaultColor;
 
     }
 
@@ -630,7 +626,6 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             Debug.Log("Chegou!");
             float dist = Vector3.Distance(this.transform.position, enemy.transform.position);
-            Debug.Log($"{dist}");
 
             if (type == Actions.AttackType.melee && dist <= character.GetMeleeDistance())
             {
@@ -760,7 +755,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
             float timeElapsed = 0f;
             float alpha = 1f;
 
-            Global.UI.SetCursor(Global.UI.cursorDefault, false);
+            Global.Canvas.SetCursor(Global.Canvas.cursorDefault, false);
 
             while (timeElapsed < fadeSpeed)
             {
@@ -797,7 +792,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
                 shootPoint.transform.rotation = Quaternion.LookRotation(vo);
 
-                if (Input.GetMouseButtonDown(0) && canShoot && canAct && !Global.CanvasManager.MouseIsOver)
+                if (Input.GetMouseButtonDown(0) && canShoot && canAct && !Global.Canvas.MouseIsOver)
                 {
                     Rigidbody obj = Instantiate(projectile, shootPoint.position, transform.rotation);
                     obj.velocity = vo;
@@ -808,7 +803,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
                     StartCoroutine(HideLine());
                 }
-                else if (Input.GetMouseButtonDown(0) && canShoot && canAct && Global.CanvasManager.MouseIsOver)
+                else if (Input.GetMouseButtonDown(0) && canShoot && canAct && Global.Canvas.MouseIsOver)
                 {
                     StartCoroutine(HideLine());
                 }
@@ -991,7 +986,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
         if (allow && !isAI)
         {
-            Global.UI.SetCursor(Global.UI.cursorMove, false);
+            Global.Canvas.SetCursor(Global.Canvas.cursorMove, false);
             StartCoroutine(ShowMovementPath());
         }
 
@@ -1009,7 +1004,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             if(!isAI)
             {
-                Global.UI.SetCursor(Global.UI.cursorMelee, false);
+                Global.Canvas.SetCursor(Global.Canvas.cursorMelee, false);
             }
         }
 
@@ -1032,7 +1027,7 @@ public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IP
 
             if (!isAI)
             {
-                Global.UI.SetCursor(Global.UI.cursorRange, false);
+                Global.Canvas.SetCursor(Global.Canvas.cursorRange, false);
             }
         }
         return true;

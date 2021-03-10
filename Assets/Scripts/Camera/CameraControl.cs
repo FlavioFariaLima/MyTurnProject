@@ -133,7 +133,7 @@ public class CameraControl : MonoBehaviour
     {
         Vector3 camPos = transform.position;
 
-        if (!Global.CanvasManager.MouseIsOver)
+        if (!Global.Canvas.MouseIsOver)
         {
             if (Input.GetAxis("Mouse ScrollWheel") > 0 || Input.GetKeyDown(KeyCode.Minus))
             {

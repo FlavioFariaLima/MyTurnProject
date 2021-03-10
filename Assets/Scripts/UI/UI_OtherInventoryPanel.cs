@@ -14,7 +14,23 @@ public class UI_OtherInventoryPanel : MonoBehaviour, IBeginDragHandler, IDragHan
     private bool clampedToTop;
     private bool clampedToBottom;
 
-    public CraftStation myStation;
+    private CraftStation myStation;
+
+    public CraftStation GetMyStation()
+    {
+        return myStation;
+    }
+
+    public void SetMyStation(CraftStation station)
+    {
+        myStation = station;
+        Global.UI.activeStation = station;
+    }
+
+    private void Awake()
+    {
+
+    }
 
     public void Start()
     {
@@ -155,5 +171,6 @@ public class UI_OtherInventoryPanel : MonoBehaviour, IBeginDragHandler, IDragHan
     public void ClosePanel()
     {
         transform.gameObject.SetActive(false);
+        Global.UI.activeStation = null;
     }
 }

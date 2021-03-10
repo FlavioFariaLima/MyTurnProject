@@ -90,6 +90,7 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] private RectTransform recipeInfoPanel;
     [SerializeField] private GameObject dropedItemPrefab;
     [SerializeField] public TextMeshProUGUI distanceInfo;
+    [SerializeField] public GameObject floatInfoPanel;
     public GameObject DropItemPrefab()
     {
         return dropedItemPrefab;
@@ -115,13 +116,6 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] private GameObject matchMenu;
     [SerializeField] public GameObject playerCharactersShotcut;
 
-    [Header("Cursors")]
-    [SerializeField] public Texture2D cursorDefault;
-    [SerializeField] public Texture2D cursorInteract;
-    [SerializeField] public Texture2D cursorMove;
-    [SerializeField] public Texture2D cursorMelee;
-    [SerializeField] public Texture2D cursorRange;
-
     [Header("Colors")]
     [SerializeField] public Color defaultColor = new Color(1, 1, 1, 1);
     [SerializeField] public Color actColor = new Color(0, 0.8f, 0.2f, 1);
@@ -137,35 +131,11 @@ public class InterfaceManager : MonoBehaviour
     public Gradient gradient = new Gradient();
     [SerializeField] private GameObject destinationEffect;
     [SerializeField] private LineRenderer destinationPath;
-    private Texture2D lastCursor;
-    public Texture2D LastCursor
-    {
-        get { return lastCursor; }
-    }
-
-    // Get/Set Variables
-    public void SetCursor(Texture2D c, bool temp)
-    {
-        // Cursor Settings
-        CursorMode cursorMode = CursorMode.ForceSoftware;
-        Vector2 hotSpot = new Vector2(12, 12);
-
-        if (!temp)
-        {
-            // Set Cursor
-            Cursor.SetCursor(c, hotSpot, cursorMode);
-            lastCursor = c;
-        }
-        else
-        {
-            Cursor.SetCursor(c, hotSpot, cursorMode);
-        }
-    }
 
     // Start is called before the first frame update
     void Start()
     {
-        SetCursor(cursorDefault, false);
+        Global.Canvas.SetCursor(Global.Canvas.cursorDefault, false);
 
         // Disable and Hide Stuff
         matchMenu.SetActive(false);
@@ -191,9 +161,6 @@ public class InterfaceManager : MonoBehaviour
         equipmentSlots = slotsParent_characterEquipment.GetComponentsInChildren<InventorySlot>();
         inventorySlots = slotsParent_characterInventory.GetComponentsInChildren<InventorySlot>();
         _hotbarSlots = slotsParent_playerHotbar.GetComponentsInChildren<InventorySlot>();
-
-        // Inicia Globals
-        Global.Setup();
 
         // Events
         if (CharacterInventory != null)
@@ -224,7 +191,6 @@ public class InterfaceManager : MonoBehaviour
     {
         // Check what in under mouse cursor
         Ray mainRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit mainHit;
 
         // Mouse Buttons
         if (true) // Only work if UI Panels are closed?
@@ -298,7 +264,7 @@ public class InterfaceManager : MonoBehaviour
         // Inventory Keys
         if (Input.GetButtonDown("TransferItem"))
         {
-            if (mouseOverSlot != null)
+            if (mouseOverSlot != null && activeStation != null)
             {
                 RaycastResult destinySlot = new RaycastResult();
                 destinySlot.gameObject = new GameObject();
@@ -324,7 +290,7 @@ public class InterfaceManager : MonoBehaviour
         // Menu and Stuff
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            Global.ShowMatchMenu();
+            Global.Canvas.ShowMatchMenu();
         }
     }
 
@@ -332,6 +298,7 @@ public class InterfaceManager : MonoBehaviour
     {
         yield return new WaitForSeconds(.2f);
         Global.UI.InterectiveMenu.SetActive(false);
+        Debug.Log("CloseMenu()");
     }
 
     // UI
@@ -464,7 +431,7 @@ public class InterfaceManager : MonoBehaviour
         characterSelectedToUI = Global.Match.InGameCharacters().Find(x => x.GetId() == id);
 
         // Sent to UI
-        UpdateCharacterIcon(characterSelectedToUI);
+        UpdateCharacterInUI(characterSelectedToUI);
 
         // Active if is Turn Owner
         if (characterSelectedToUI == Global.Match.InGameCharacters()[Global.Match.TurnOwnerId])
@@ -540,11 +507,15 @@ public class InterfaceManager : MonoBehaviour
                     // If Weapon
                     if (mouseOverSlot.Item().itemType == ItemType.weapon)
                     {
+                        child.gameObject.SetActive(true);
+
                         child.Find("Value").GetComponent<TextMeshProUGUI>().text = $"1d{mouseOverSlot.Item().weaponStats.dmgM}";
                         child.Find("TypeInfo").GetComponent<TextMeshProUGUI>().text = $"{mouseOverSlot.Item().weaponStats.weaponType[0]}";
                         child.Find("Value2").GetComponent<TextMeshProUGUI>().text = mouseOverSlot.Item().weaponStats.critical.ToString();
                         child.Find("Value3").GetComponent<TextMeshProUGUI>().text = $"x{mouseOverSlot.Item().weaponStats.criticalMultiply}";
                     }
+                    else
+                        child.gameObject.SetActive(false);
                 }
 
                 if (child.name == "ItemCondition")
@@ -710,7 +681,7 @@ public class InterfaceManager : MonoBehaviour
         }
     }
 
-    public void UpdateCharacterIcon(CharacterSheet character)
+    public void UpdateCharacterInUI(CharacterSheet character)
     {
         portrait.transform.Find("PortraitSprite").GetComponent<UnityEngine.UI.Image>().sprite = character.Portrait();
         UpdateCharacterInfoPanel(character);
@@ -829,6 +800,7 @@ public class InterfaceManager : MonoBehaviour
         //characterInfo.SetActive(true);
     }
 
+    // Stats Bars
     public void UpdateHealthBar(CharacterSheet character)
     {
         barHealth.transform.GetComponentInChildren<TextMeshProUGUI>().text = $"{(int)character.GetCurrrentHelth()} / {(int)character.GetHealth()}";
@@ -996,10 +968,5 @@ public class InterfaceManager : MonoBehaviour
     public GameObject GetMatchMenu()
     {
         return matchMenu;
-    }
-
-    public void MatchMenu()
-    {
-        Global.ShowMatchMenu();
     }
 }

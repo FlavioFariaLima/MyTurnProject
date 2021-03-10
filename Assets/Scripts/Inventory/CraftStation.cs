@@ -13,7 +13,6 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [SerializeField] private string stationName;
     [SerializeField] private MyParameters.StationType stationType;
     [SerializeField] private GameObject activeEffect;
-    [SerializeField] private GameObject infoName;
 
     private GameObject mainInventoryPanel;
     private GameObject stationInfoPanel;
@@ -51,8 +50,6 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     {
         stationInventory = GetComponent<Inventory>();
         isProcessing = false;
-
-        infoName.GetComponent<TextMeshPro>().text = stationName;
     }
 
     // Update is called once per frame
@@ -199,7 +196,7 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         stationSlotsParent = mainInventoryPanel.transform.Find("Scroll View").Find("Viewport").Find("").Find("InventorySlotsParent").gameObject;
         stationSlots = stationSlotsParent.GetComponentsInChildren<InventorySlot>();
 
-        mainInventoryPanel.GetComponent<UI_OtherInventoryPanel>().myStation = this;
+        mainInventoryPanel.GetComponent<UI_OtherInventoryPanel>().SetMyStation(this);
         mainInventoryPanel.transform.SetSiblingIndex(mainInventoryPanel.transform.childCount);
     }
 
@@ -386,14 +383,17 @@ public class CraftStation : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     {
         while (mouseIsOver)
         {
-            infoName.SetActive(true);
-            Global.FaceTextMeshToCamera(infoName.transform);
-            transform.GetComponent<Renderer>().material.EnableKeyword("_EMISSION");
+            //infoName.gameObject.SetActive(true);
+            //Global.FaceTextMeshToCamera(infoName.transform);
+            //transform.GetComponentInChildren<Renderer>().material.EnableKeyword("_EMISSION");
+            Global.UI.floatInfoPanel.SetActive(true);
+            Global.UI.floatInfoPanel.transform.Find("infoText").GetComponent<TextMeshProUGUI>().text = stationName;
 
             yield return null;
         }
 
-        infoName.SetActive(false);
-        transform.GetComponent<Renderer>().material.DisableKeyword("_EMISSION");
+        Global.UI.floatInfoPanel.SetActive(false);
+        //infoName.gameObject.SetActive(false);
+        //transform.GetComponentInChildren<Renderer>().material.DisableKeyword("_EMISSION");
     }
 }

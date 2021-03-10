@@ -5,11 +5,11 @@ using UnityEngine;
 public class CharacterEquipment : MonoBehaviour
 {
     public bool hasMeleeWeapon = false;
-    public int meleeWeaponIndex = -1;
     public bool hasRangeWeapon = false;
+    [HideInInspector] public int meleeWeaponIndex = -1;
 
-    public PlayerCharacterController controller;
-    public Dictionary<int, Item> equipments = new Dictionary<int, Item>();
+    [HideInInspector] public PlayerCharacterController controller;
+    [HideInInspector] public Dictionary<int, Item> equipments = new Dictionary<int, Item>();
 
     // Start is called before the first frame update
     void Awake()

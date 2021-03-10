@@ -58,6 +58,12 @@ public class MatchManager : MonoBehaviour
         return inGameCharacters;
     }
 
+    private void Awake()
+    {
+        // Inicia Globals
+        Global.Setup();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -120,6 +126,7 @@ public class MatchManager : MonoBehaviour
     {
         inGameCharacters[turnOwnerIndex].controller.ResetActions();
         Global.UI.DisablActionsBtns();
+
         if (inGameCharacters[turnOwnerIndex].controller.IsAi() && inGameCharacters[turnOwnerIndex].controller.GetPlayerAI() == null)
         {
             Global.UI.pathLine.gameObject.SetActive(false);
@@ -305,7 +312,7 @@ public class MatchManager : MonoBehaviour
     {
         SetupCharacterController();
         inGameCharacters[turnOwnerIndex].controller.AllowToMove(true);
-        Global.UI.SetCursor(Global.UI.cursorDefault, false);
+        Global.Canvas.SetCursor(Global.Canvas.cursorDefault, false);
 
         // Change UI Indicator
         Global.UI.TurnPanel.transform.Find("TurnCounter").GetComponent<TextMeshProUGUI>().text = $"{turnsCount + 1}";
@@ -315,7 +322,6 @@ public class MatchManager : MonoBehaviour
 
         while (totalTime > timeAlertRest)
         {
-            //countdownImage.fillAmount = totalTime / duration;
             totalTime -= Time.deltaTime;
             var integer = (int)totalTime; /* choose how to quantize this */
 
@@ -326,9 +332,8 @@ public class MatchManager : MonoBehaviour
 
         while (totalTime >= 0 && totalTime <= timeAlertRest)
         {
-            //countdownImage.fillAmount = totalTime / duration;
             totalTime -= Time.deltaTime;
-            var integer = (int)totalTime; /* choose how to quantize this */
+            var integer = (int)totalTime;
 
             Global.UI.TurnPanel.transform.Find("Timer").GetComponent<TextMeshProUGUI>().text = integer.ToString();
 

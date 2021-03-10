@@ -223,9 +223,9 @@ public class InventorySlot : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
                 if (r.gameObject.transform.name == "OtherInventoryButton")
                 {
-                    Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory();
+                    Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().GetStationInventory();
                     Global.UI.ActiveStationInventory.ChangePosition(destinyIndex, slotIndex, item);
-                    r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                    r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().UpdateStationPanel();
                 }
 
                 if (r.gameObject.transform.name == "HotbarButton")
@@ -251,8 +251,8 @@ public class InventorySlot : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
                     if (slotType == MyParameters.SlotType.OtherInventory)
                     {
-                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory().RemoveItem(slotIndex);
-                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().GetStationInventory().RemoveItem(slotIndex);
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().UpdateStationPanel();
                     }
 
                     hasMoved = true;
@@ -260,14 +260,14 @@ public class InventorySlot : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
                 if (r.gameObject.transform.name == "OtherInventoryButton")
                 {
-                    Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory();
+                    Global.UI.ActiveStationInventory = r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().GetStationInventory();
                     Global.UI.ActiveStationInventory.AddItem(item);
-                    r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                    r.gameObject.transform.parent.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().UpdateStationPanel();
 
                     if (slotType == MyParameters.SlotType.OtherInventory)
                     {
-                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.GetStationInventory().RemoveItem(slotIndex);
-                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().myStation.UpdateStationPanel();
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().GetStationInventory().RemoveItem(slotIndex);
+                        transform.parent.parent.parent.parent.GetComponent<UI_OtherInventoryPanel>().GetMyStation().UpdateStationPanel();
                     }
 
                     hasMoved = true;

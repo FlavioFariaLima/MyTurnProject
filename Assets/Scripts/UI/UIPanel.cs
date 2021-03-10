@@ -24,6 +24,7 @@ public class UIPanel : MonoBehaviour
         }
     }
 
+    // If Panel has Grid Layout Group use this
     public void AjustSizeAsGrid()
     {
         if (activeAutoSize)
@@ -32,17 +33,16 @@ public class UIPanel : MonoBehaviour
             int column = 0;
             GridLayoutGroup grid = transform.GetChild(0).GetComponent<GridLayoutGroup>();
 
-            Global.GetGridColumnAndRow(grid, out column, out row);
+            Global.Canvas.GetGridColumnAndRow(grid, out column, out row);
 
             GetComponent<RectTransform>().sizeDelta = new Vector2(586, (grid.cellSize.y * column) - 100);
             grid.gameObject.GetComponent<RectTransform>().sizeDelta = GetComponent<RectTransform>().sizeDelta;
-            //grid.gameObject.GetComponent<RectTransform>().localPosition = new Vector3(0, 0, 0);
         }
     }
 
     public float ScaleFactor()
     {
-        return Global.CanvasManager.gameObject.GetComponent<Canvas>().scaleFactor;
+        return Global.Canvas.gameObject.GetComponent<Canvas>().scaleFactor;
     }
 
     public IEnumerator LerpMoveObject(RectTransform rectTransform, PanelPosition panelPos, bool open)

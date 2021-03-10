@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+[Serializable]
 public class CharacterSheet: MonoBehaviour
 {
     // Components
     [SerializeField] private int charId;
+    [SerializeField] private string charName;
     [SerializeField] private int playerId;
 
     [HideInInspector] public PlayerCharacterController controller; // Set by CharacterController      
@@ -94,6 +96,14 @@ public class CharacterSheet: MonoBehaviour
         return charId;
     }
 
+    public void SetId(bool reset)
+    {
+        if (reset)
+            charId = 0;
+        else
+            charId = GetInstanceID();
+    }
+
     public int GetPlayerId()
     {
         return playerId;
@@ -101,7 +111,13 @@ public class CharacterSheet: MonoBehaviour
 
     public string GetName()
     {
-        return characterInfo.characterName;
+        return charName;
+    }
+
+    public void SetName(string newName)
+    {
+        charName = newName;
+        gameObject.name = charName;
     }
 
     public Classe GetClass()
