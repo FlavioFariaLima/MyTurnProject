@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Race", menuName = "UltraMare/Characters/Race", order = 1)]
+[Serializable]
 public class Race : ScriptableObject
 {
     public string raceName;

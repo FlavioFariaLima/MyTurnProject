@@ -30782,6 +30782,8 @@ MonoBehaviour:
   - {fileID: 60122318}
   - {fileID: 514712998}
   playerIsAI: 0
+  isMainPlayer: 0
+  charactersCount: 0
 --- !u!1 &1356507074
 GameObject:
   m_ObjectHideFlags: 0
@@ -32540,6 +32542,8 @@ MonoBehaviour:
   - {fileID: 1618403985}
   - {fileID: 1409879179}
   playerIsAI: 1
+  isMainPlayer: 0
+  charactersCount: 0
 --- !u!114 &1409879179 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8783765926900293336, guid: 388f1356c41895d428eb9c9fe5fa2d58, type: 3}

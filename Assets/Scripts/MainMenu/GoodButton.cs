@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
+[Serializable]
 public class GoodButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Header("Button States")]
@@ -12,8 +14,9 @@ public class GoodButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     [SerializeField] private Sprite Selected;
 
     [SerializeField] private bool hasGroup;
+    [SerializeField] public bool isTab;
+    [SerializeField] public int tabIndex;
     public bool isSelected = false;
-
 
     public void SetSelectedState(bool state)
     {
@@ -23,6 +26,12 @@ public class GoodButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             GetComponent<Image>().sprite = Selected;
         else
             GetComponent<Image>().sprite = Normal;
+
+        if (isTab)
+        {
+            GameObject.Find("Global").GetComponent<CreateCharacter>().SelectTabPanel(tabIndex);
+            transform.SetAsLastSibling();
+        }
     }
 
     public void OnPointerClick(PointerEventData eventData)

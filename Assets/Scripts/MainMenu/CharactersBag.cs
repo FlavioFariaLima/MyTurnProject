@@ -29,11 +29,11 @@ public class CharactersBag : MonoBehaviour
 
         if (selectedCharacters.Count == partySize)
         {
-            MenuManager.GetSelectedPanel().destinyPanel.transform.Find("StartBtn").GetComponent<Button>().interactable = true;
+            MenuManager.startManager.startBtn.GetComponent<Button>().interactable = true;
         }
         else
         {
-            MenuManager.GetSelectedPanel().destinyPanel.transform.Find("StartBtn").GetComponent<Button>().interactable = false;
+            MenuManager.startManager.startBtn.GetComponent<Button>().interactable = false;
         }
     }
 
@@ -52,6 +52,6 @@ public class CharactersBag : MonoBehaviour
 
         MenuManager.startManager.mainPlayer.charactersCount--;
         option.gameObject.SetActive(false);
-        MenuManager.startManager.RecountCharacters();
+        MenuManager.createCharacter.RecountCharacters();
     }
 }

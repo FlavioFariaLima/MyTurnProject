@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Character", menuName = "UltraMare/Characters/Character", order = 3)]
+[Serializable]
 public class Character : ScriptableObject
 {
     public string characterName;
@@ -138,7 +139,6 @@ public class Character : ScriptableObject
         return newAbilities;
     }    
 }
-
 
 [Serializable]
 public class Abilities

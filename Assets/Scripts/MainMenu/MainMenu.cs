@@ -21,22 +21,12 @@ public class MainMenu : MonoBehaviour
         return selectedPanel;
     }
 
-
-    [Header("Scenes")]
-    [SerializeField] private string newMatchScene;
-
-    [Header("Misc")]
-    [SerializeField] private Slider loaderBar;    
-
     // Start is called before the first frame update
     void Awake()
     {
         // Managers
         startManager = GetComponent<StartManager>();
         createCharacter = GetComponent<CreateCharacter>();
-
-        // Hide Stuff
-        loaderBar.gameObject.SetActive(false);
 
         // Set Main Menu Options
         foreach (MainMenuOptions m in options)
@@ -71,27 +61,7 @@ public class MainMenu : MonoBehaviour
 
         // Set Individual
         if (option == "NewGame")
-            startManager.RecountCharacters();
-    }
-
-    public void LoadMatchScene()
-    {
-        StartCoroutine(LoadSceneAsync(newMatchScene));
-    }
-
-    IEnumerator LoadSceneAsync(string levelName)
-    {
-        loaderBar.gameObject.SetActive(true);
-        AsyncOperation op = SceneManager.LoadSceneAsync(levelName, LoadSceneMode.Single);
-
-        while (!op.isDone)
-        {
-            float progress = Mathf.Clamp01(op.progress / .9f);
-            loaderBar.value = progress;
-            loaderBar.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = $" {(int)(progress * 100f)}%";
-
-            yield return null;
-        }
+            createCharacter.RecountCharacters();
     }
 
     public void QuitGame()

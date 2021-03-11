@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
 
+[Serializable]
 public class PlayerCharacterController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Character States")]

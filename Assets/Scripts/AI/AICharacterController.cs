@@ -5,8 +5,9 @@ using UnityEngine;
 using Unity.Jobs;
 using System.ComponentModel;
 using Unity.Collections;
+using System;
 
-[SerializeField]
+[Serializable]
 public class AICharacterController : MonoBehaviour
 {
     private PlayerCharacterController characterController;

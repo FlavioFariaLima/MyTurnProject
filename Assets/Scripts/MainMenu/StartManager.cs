@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class StartManager : MonoBehaviour
@@ -8,68 +10,59 @@ public class StartManager : MonoBehaviour
     // Menu Manager
     private MainMenu MenuManager;
 
-    [SerializeField] private List<Player> players;
-    [SerializeField] private CharactersBag charactersBag;
-    [SerializeField] private int maxCharacters;
-
+    [Header("Player && Characters Settings")]
+    [SerializeField] public List<Player> players;
+    [SerializeField] public CharactersBag charactersBag;
+    [SerializeField] public int maxCharacters;
     [HideInInspector] public Player mainPlayer;
+
+    [Header("Buttons & Panels")]
+    [SerializeField] public GameObject startBtn;
+
+    [Header("Scenes")]
+    [SerializeField] private string newMatchScene;
+
+    [Header("Misc")]
+    [SerializeField] private Slider loaderBar;
 
     // Start is called before the first frame update
     private void Awake()
     {
+        // Set Manager
         MenuManager = GetComponent<MainMenu>();
-    }
 
-    public void RecountCharacters()
-    {
+        // Hide Stuff
+        loaderBar.gameObject.SetActive(false);
+
         foreach (Player p in players)
         {
             if (p.IsMainPlayer())
-            {
                 mainPlayer = p;
-
-                // Hide Character Buttons
-                foreach (Transform child in charactersBag.transform)
-                {
-                    child.gameObject.SetActive(false);
-                }
-
-                // Show Character Buttons if have Characters
-                for (int c = 0; c < maxCharacters; c++)
-                {
-                    if (p.PlayerCharacters[c].GetId() != 0)
-                    {
-                        charactersBag.transform.GetChild(c).gameObject.SetActive(true);
-                        charactersBag.transform.GetChild(c).GetComponent<PseudoCharacter>().MyCharacter(p.PlayerCharacters[c]); // Set Character
-                    }
-                }
-            }
         }
-
-        if (mainPlayer.CharactersCount < maxCharacters)
-        {
-            MenuManager.GetSelectedPanel().destinyPanel.transform.Find("PlayerCharacters").Find("NewCharacterBtn").GetComponent<Button>().interactable = true;
-        }
-        else
-            MenuManager.GetSelectedPanel().destinyPanel.transform.Find("PlayerCharacters").Find("NewCharacterBtn").GetComponent<Button>().interactable = false;
     }
 
-    public void CreateNewCharacter(string newName)
+    public void CreateNewCharacter()
     {
-        for (int c = 0; c < mainPlayer.PlayerCharacters.Count; c++)
+        MenuManager.createCharacter.CreateNewCharacter(mainPlayer);
+    }
+
+    public void LoadMatchScene()
+    {
+        StartCoroutine(LoadSceneAsync(newMatchScene));
+    }
+
+    IEnumerator LoadSceneAsync(string levelName)
+    {
+        loaderBar.gameObject.SetActive(true);
+        AsyncOperation op = SceneManager.LoadSceneAsync(levelName, LoadSceneMode.Single);
+
+        while (!op.isDone)
         {
-            if (mainPlayer.PlayerCharacters[c].GetId() == 0)
-            {
-                mainPlayer.PlayerCharacters[c].SetId(false);
-                mainPlayer.PlayerCharacters[c].SetName(newName);
+            float progress = Mathf.Clamp01(op.progress / .9f);
+            loaderBar.value = progress;
+            loaderBar.transform.Find("Text").GetComponent<TextMeshProUGUI>().text = $" {(int)(progress * 100f)}%";
 
-                MenuManager.startManager.mainPlayer.charactersCount++;
-                RecountCharacters();
-
-                return;
-            }
+            yield return null;
         }
-
-        RecountCharacters();
     }
 }

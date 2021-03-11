@@ -13,6 +13,13 @@ public class GoodButtonsGroup : MonoBehaviour
     void Awake()
     {
         allButtons.AddRange(GetComponentsInChildren<GoodButton>());
+
+        SelectButton(allButtons[0].transform);
+
+        for (int b = 1; b < allButtons.Count; b++)
+        {
+            allButtons[b].SetSelectedState(false);
+        }
     }
 
     public void SelectButton(Transform option)
@@ -23,14 +30,10 @@ public class GoodButtonsGroup : MonoBehaviour
             selectedButtons.Remove(option.GetComponent<GoodButton>());
             option.GetComponent<GoodButton>().SetSelectedState(false);
 
-            GetComponentInParent<CharactersBag>().CheckForCharacter();
+            if (!option.GetComponent<GoodButton>().isTab)
+                GetComponentInParent<CharactersBag>().CheckForCharacter();
 
             return;
-        }
-
-        if (option.GetComponent<GoodButton>().isSelected)
-        {
-            option.GetComponent<GoodButton>().SetSelectedState(false);
         }
 
         if (selectedButtons.Count < checkNumber)
@@ -42,13 +45,14 @@ public class GoodButtonsGroup : MonoBehaviour
         {
             // Remove One
             selectedButtons[0].SetSelectedState(false);
-            selectedButtons.RemoveAt(0);
+            selectedButtons.RemoveAt(selectedButtons.Count - 1);
 
             // Add New
             option.GetComponent<GoodButton>().SetSelectedState(true);
             selectedButtons.Add(option.GetComponent<GoodButton>());
         }
 
-        GetComponentInParent<CharactersBag>().CheckForCharacter();
+        if (!option.GetComponent<GoodButton>().isTab)
+            GetComponentInParent<CharactersBag>().CheckForCharacter();
     }
 }
