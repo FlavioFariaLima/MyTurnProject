@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+[Serializable]
 public class GoodButtonsGroup : MonoBehaviour
 {
     [SerializeField] public int checkNumber;
@@ -45,11 +47,12 @@ public class GoodButtonsGroup : MonoBehaviour
         {
             // Remove One
             selectedButtons[0].SetSelectedState(false);
-            selectedButtons.RemoveAt(selectedButtons.Count - 1);
+            selectedButtons.RemoveAt(0);
 
             // Add New
             option.GetComponent<GoodButton>().SetSelectedState(true);
             selectedButtons.Add(option.GetComponent<GoodButton>());
+
         }
 
         if (!option.GetComponent<GoodButton>().isTab)

@@ -27,13 +27,16 @@ public class CharactersBag : MonoBehaviour
                 selectedCharacters.Add(btn.GetComponent<PseudoCharacter>().MyCharacter());
         }
 
-        if (selectedCharacters.Count == partySize)
+        if (MenuManager.startManager)
         {
-            MenuManager.startManager.startBtn.GetComponent<Button>().interactable = true;
-        }
-        else
-        {
-            MenuManager.startManager.startBtn.GetComponent<Button>().interactable = false;
+            if (selectedCharacters.Count == partySize)
+            {
+                MenuManager.startManager.startBtn.GetComponent<Button>().interactable = true;
+            }
+            else
+            {
+                MenuManager.startManager.startBtn.GetComponent<Button>().interactable = false;
+            }
         }
     }
 

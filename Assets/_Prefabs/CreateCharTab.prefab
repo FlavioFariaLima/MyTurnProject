@@ -223,10 +223,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51f0f1036770ea647be2a5b5149f0c7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Normal: {fileID: 21300000, guid: e4c261293bfe98f4fa9d9591373bc443, type: 3}
-  Highlight: {fileID: 21300000, guid: 12eaceb7341922b4398ff20c8bbcff90, type: 3}
-  Selected: {fileID: 21300000, guid: 12eaceb7341922b4398ff20c8bbcff90, type: 3}
+  Normal: {fileID: 21300000, guid: 12eaceb7341922b4398ff20c8bbcff90, type: 3}
+  Highlight: {fileID: 21300000, guid: e4c261293bfe98f4fa9d9591373bc443, type: 3}
+  Selected: {fileID: 21300000, guid: e4c261293bfe98f4fa9d9591373bc443, type: 3}
   hasGroup: 1
   isTab: 1
   tabIndex: 0
-  isSelected: 1
+  hasOwnTabPanel: 1
+  myTab: {fileID: 0}
+  isSelected: 0
+  Callback:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 6390023806850225839}
+        m_TargetAssemblyTypeName: GoodButton, Assembly-CSharp
+        m_MethodName: ShowMyTab
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2

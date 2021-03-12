@@ -13,6 +13,10 @@ MonoBehaviour:
   m_Name: Human
   m_EditorClassIdentifier: 
   raceName: Human
+  description: "Medium: As Medium creatures, humans have no special bonuses or penalties
+    due to their size.\r\nHuman base land speed is 30 feet.\r\n1 extra feat at 1st
+    level.\r\n4 extra skill points at 1st level and 1 extra skill point at each additional
+    level.\r"
   size: 0
   movement: 9
   darkVision: 0

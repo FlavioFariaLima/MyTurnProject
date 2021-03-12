@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d31c9faede51114191018d643b14d2b, type: 3}
+  m_Name: Half-Elf
+  m_EditorClassIdentifier: 
+  raceName: Half-Elf
+  description: 'Medium: As Medium creatures, half-elves have no special bonuses or
+    penalties due to their size.
+
+    Half-elf base land speed is 30 feet.
+
+    Immunity
+    to sleep spells and similar magical effects, and a +2 racial bonus on saving
+    throws against enchantment spells or effects.
+
+    Low-Light Vision: A half-elf
+    can see twice as far as a human in starlight, moonlight, torchlight, and similar
+    conditions of poor illumination. She retains the ability to distinguish color
+    and detail under these conditions.
+
+    +1 racial bonus on Listen, Search, and
+    Spot checks.
+
+    +2 racial bonus on Diplomacy and Gather Information checks.
+
+    Elven
+    Blood: For all effects related to race, a half-elf is considered an elf.'
+  size: 0
+  movement: 9
+  darkVision: 9
+  abilitiesBonus:
+    strength: 
+    constitution: 
+    dexterity: 
+    intelligence: 
+    wisdow: 
+    charisma: 
+  skill:
+    balance: 0
+    concentration: 0
+    decipherScript: 0
+    disableDevice: 0
+    handleAnimal: 0
+    heal: 0
+    hide: 0
+    intimidate: 0
+    jump: 0
+    knowledge: 0
+    moveSilently: 0
+    openLock: 0
+    perception: 2
+    search: 1

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class CreateCharacter : MonoBehaviour
 {
@@ -16,20 +17,28 @@ public class CreateCharacter : MonoBehaviour
     [Header("Tab Panels")]
     [SerializeField] private GameObject[] tabsPanels;
 
-    [Header("InputFields")]
+    [Header("Bio InputFields")]
     [SerializeField] private TMP_InputField inputName;
     [SerializeField] private TMP_Dropdown selectGender;
     [SerializeField] private TMP_Dropdown selectRegion;
     [SerializeField] private TMP_Dropdown selectOrigin;
 
+    [Header("Races")]
+    [SerializeField] private List<Race> races;
+    [SerializeField] private GameObject racesParent;
+    [SerializeField] private TextMeshProUGUI racesDescription;
 
     private Player mainPlayer;
+    private StartCharacter creatingCharacter;
 
     // Start is called before the first frame update
     void Awake()
     {
         MenuManager = GetComponent<MainMenu>();
         createCharacterPanel.SetActive(false);
+
+        // Races
+        SetRacesButtons();
     }
 
     // Update is called once per frame
@@ -110,9 +119,33 @@ public class CreateCharacter : MonoBehaviour
             MenuManager.GetSelectedPanel().destinyPanel.transform.Find("PlayerCharacters").Find("NewCharacterBtn").GetComponent<Button>().interactable = false;
     }
 
+    // Deal With UI and Stuff
     private void CleanAll()
     {
         inputName.text = string.Empty;
+    }
+
+    public void StartNewCharacter()
+    {
+        if (creatingCharacter == null)
+            creatingCharacter = new StartCharacter();
+    }
+
+    public void SetRacesButtons()
+    {
+        for (int r = 0; r < races.Count; r++ )
+        {
+            racesParent.transform.GetChild(r).GetComponentInChildren<TextMeshProUGUI>().text = races[r].raceName;
+            racesParent.transform.GetChild(r).gameObject.SetActive(true);
+        }
+
+        racesParent.transform.GetChild(0).GetComponent<GoodButton>().SetSelectedState(true);
+    }
+
+    public void SelectRace(GoodButton btn)
+    {
+        creatingCharacter.race = races[btn.tabIndex];
+        racesDescription.text = creatingCharacter.race.description;
     }
 
     public void OpenCreateCharPanel()
@@ -126,15 +159,50 @@ public class CreateCharacter : MonoBehaviour
         createCharacterPanel.SetActive(false);
     }
 
-    public void SelectTabPanel(int index)
-    {
-        for (int t = 0; t < tabsPanels.Length; t++)
-        {
-            if (t == index)
-                tabsPanels[t].SetActive(true);
-            else
-                tabsPanels[t].SetActive(false);
+}
 
-        }
+
+[Serializable]
+public class StartCharacter
+{
+    public string characterName;
+    public Sprite portrait;
+
+    // Stats
+    [Header("Character Experience")]
+    public int level;
+    public int xp;
+
+    public Race race;
+    public Classe classe;
+
+    [Header("strength - constitution - dexterity - intelligence - wisdow - charisma")]
+    public int[] abilitiesValues;
+    private Abilities abilities;
+
+    // Combat
+    public int health;
+    public int armorClass;
+
+    // BaseAttack
+    private int baseAttack;
+    public int BaseAttack
+    {
+        get { return baseAttack; }
+        set { baseAttack = level / value; }
     }
+
+    public int meleeAttack;
+    public int meleeDamage;
+    public float meleeDistance;
+
+    public int rangeAttack;
+    public int rangeDamage;
+    public float rangeDistance;
+
+    // Resistences
+    public Resistences resistences;
+
+    // Movement
+    public int movement;
 }

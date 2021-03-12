@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -12,11 +13,29 @@ public class GoodButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     [SerializeField] private Sprite Normal;
     [SerializeField] private Sprite Highlight;
     [SerializeField] private Sprite Selected;
-
     [SerializeField] private bool hasGroup;
+
+    [Header("Tab States")]
     [SerializeField] public bool isTab;
     [SerializeField] public int tabIndex;
+    [SerializeField] public bool hasOwnTabPanel;
+    [SerializeField] private GameObject myTab;
+
+    [Header("Events")]
     public bool isSelected = false;
+    [SerializeField] public UnityEvent Callback;
+
+    [SerializeField]
+    public void InvokeCallback()
+    {
+        Callback?.Invoke();
+    }
+
+    private void Awake()
+    {
+        if (!hasOwnTabPanel)
+            myTab = null;
+    }
 
     public void SetSelectedState(bool state)
     {
@@ -25,21 +44,29 @@ public class GoodButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         if (isSelected)
             GetComponent<Image>().sprite = Selected;
         else
-            GetComponent<Image>().sprite = Normal;
+            GetComponent<Image>().sprite = Normal;   
+    }
 
-        if (isTab)
+    public void ShowMyTab()
+    {
+        myTab.SetActive(true);
+
+        foreach (Transform child in transform.parent)
         {
-            GameObject.Find("Global").GetComponent<CreateCharacter>().SelectTabPanel(tabIndex);
-            transform.SetAsLastSibling();
+            if (child != transform)
+                child.GetComponent<GoodButton>().myTab.SetActive(false);
         }
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
+
         if (hasGroup)
             GetComponentInParent<GoodButtonsGroup>().SelectButton(transform);
         else
             SetSelectedState(!isSelected);
+
+        InvokeCallback();
     }
 
     public void OnPointerEnter(PointerEventData eventData)
