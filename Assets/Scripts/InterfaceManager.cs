@@ -47,6 +47,7 @@ public class InterfaceManager : MonoBehaviour
     [SerializeField] private GameObject characterInfo;
     public GameObject panel_PlayerInventory;
     public GameObject slotsParent_characterInventory;
+    public GameObject equipamentInfo;
     public GameObject slotsParent_characterEquipment;
     public GameObject characterCraftPanel;
     public GameObject craftSlotsParents;
@@ -734,27 +735,7 @@ public class InterfaceManager : MonoBehaviour
             else if (child.name == "health")
             {
                 child.GetComponent<TextMeshProUGUI>().text = $"{character.GetHealth()}";
-            }
-            else if (child.name == "armour")
-            {
-                child.GetComponent<TextMeshProUGUI>().text = $"{character.GetArmour()}";
-            }
-            else if (child.name == "meleeAttack")
-            {
-                child.GetComponent<TextMeshProUGUI>().text = $"+{character.GetMeleeAttack()}";
-            }
-            else if (child.name == "rangeAttack")
-            {
-                child.GetComponent<TextMeshProUGUI>().text = $"+{character.GetRangeAttack()}";
-            }
-            else if (child.name == "meleeDamage")
-            {
-                child.GetComponent<TextMeshProUGUI>().text = $"1d{character.GetMeleeDamage()} + {character.GetAbilities().strength[1]}";
-            }
-            else if (child.name == "rangeDamage")
-            {
-                child.GetComponent<TextMeshProUGUI>().text = $"1d{character.GetRangeDamage()}";
-            }
+            }          
             else if (child.name == "movement")
             {
                 child.GetComponent<TextMeshProUGUI>().text = $"{character.GetMovement()}m";
@@ -794,6 +775,30 @@ public class InterfaceManager : MonoBehaviour
                         c.GetChild(0).GetComponent<TextMeshProUGUI>().text = $"{character.GetAbilities().charisma[1]}";
                     }
                 }
+            }
+        }
+
+        foreach (Transform child in equipamentInfo.transform)
+        {
+            if (child.name == "armour")
+            {
+                child.GetComponent<TextMeshProUGUI>().text = $"{character.GetArmour()}";
+            }
+            else if(child.name == "meleeAttack")
+            {
+                child.GetComponent<TextMeshProUGUI>().text = $"+{character.GetMeleeAttack()}";
+            }
+            else if (child.name == "rangeAttack")
+            {
+                child.GetComponent<TextMeshProUGUI>().text = $"+{character.GetRangeAttack()}";
+            }
+            else if (child.name == "meleeDamage")
+            {
+                child.GetComponent<TextMeshProUGUI>().text = $"1d{character.GetMeleeDamage()} + {character.GetAbilities().strength[1]}";
+            }
+            else if (child.name == "rangeDamage")
+            {
+                child.GetComponent<TextMeshProUGUI>().text = $"1d{character.GetRangeDamage()}";
             }
         }
 

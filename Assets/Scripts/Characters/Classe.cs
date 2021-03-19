@@ -8,6 +8,7 @@ using UnityEngine;
 public class Classe : ScriptableObject
 {
     public string classeName;
+    [TextArea(15, 20)] public string classeDescription;
 
     // Class Bonus
     public int healthDice;

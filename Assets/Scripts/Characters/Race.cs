@@ -9,7 +9,6 @@ using UnityEngine;
 public class Race : ScriptableObject
 {
     public string raceName;
-
     [TextArea(15, 20)] public string description;
 
     // Race Bonus

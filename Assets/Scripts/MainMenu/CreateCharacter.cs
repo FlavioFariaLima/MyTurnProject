@@ -23,10 +23,15 @@ public class CreateCharacter : MonoBehaviour
     [SerializeField] private TMP_Dropdown selectRegion;
     [SerializeField] private TMP_Dropdown selectOrigin;
 
-    [Header("Races")]
+    [Header("Race")]
     [SerializeField] private List<Race> races;
     [SerializeField] private GameObject racesParent;
     [SerializeField] private TextMeshProUGUI racesDescription;
+
+    [Header("Class")]
+    [SerializeField] private List<Classe> classes;
+    [SerializeField] private GameObject claaParent;
+    [SerializeField] private TextMeshProUGUI classDescription;
 
     private Player mainPlayer;
     private StartCharacter creatingCharacter;
@@ -146,6 +151,23 @@ public class CreateCharacter : MonoBehaviour
     {
         creatingCharacter.race = races[btn.tabIndex];
         racesDescription.text = creatingCharacter.race.description;
+    }
+
+    public void SetClassButtons()
+    {
+        for (int r = 0; r < races.Count; r++)
+        {
+            claaParent.transform.GetChild(r).GetComponentInChildren<TextMeshProUGUI>().text = classes[r].classeName;
+            claaParent.transform.GetChild(r).gameObject.SetActive(true);
+        }
+
+        claaParent.transform.GetChild(0).GetComponent<GoodButton>().SetSelectedState(true);
+    }
+
+    public void SelectClass(GoodButton btn)
+    {
+        creatingCharacter.classe = classes[btn.tabIndex];
+        classDescription.text = creatingCharacter.classe.classeDescription;
     }
 
     public void OpenCreateCharPanel()
